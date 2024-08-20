@@ -4,14 +4,24 @@ import sys
 import logging
 import inspect
 from colorlog import ColoredFormatter
+import threading
 
 file_handler = logging.FileHandler('superwrapper.log')
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
 
 
+#---------------------------
+#     Logging class
+#---------------------------
 class Logging:
     def __init__(self, debug, relative_path=None):
+        '''
+        Logging class for PiPerW
+        
+        :param debug: bool: Enable debug logging
+        :param relative_path: str: Relative path to the main script
+        '''
         
         # Initialize class variables
         self.debug = debug
@@ -55,40 +65,81 @@ class Logging:
         
         
     def update_data(self, file, function):
+        '''
+        Update the file and function in the extra_log dictionary
+
+        :param file: str: File name
+        :param function: str: Function name
+        '''
+        
         file = file.replace(self.relative_path, '')[1:]
         self.extra_log['file'] = file
         self.extra_log['function'] = function
         
-    def info(self, message):        
+    def info(self, message):
+        '''
+        Log an info message
+        
+        :param message: str: Message to log
+        '''        
         self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
         self.logger.info(message)
     
     def warning(self, message):
+        '''
+        Log a warning message
+        
+        :param message: str: Message to log
+        '''
         self.logger.warning(message)
     
     def error(self, message):
+        '''
+        Log an error message
+        
+        :param message: str: Message to log
+        '''
         self.logger.error(message)
     
     def critical(self, message):
+        '''
+        Log a critical message
+        
+        :param message: str: Message to log
+        '''
         self.logger.critical(message)
     
     def exception(self, message):
+        '''
+        Log an exception message
+        
+        :param message: str: Message to log
+        '''
         self.logger.exception(message)
-    
-    def log(self, level, message):
-        self.logger.log(level, message)
-    
-    def example(self):
-        self.logger.debug("This is a debug message")
-        self.logger.info("This is an info message")
-        self.logger.warning("This is a warning message")
-        self.logger.error("This is an error message")
-        self.logger.critical("This is a critical message")
+        
+        
+#---------------------------
+# Custom trheading class for exception handling
+#---------------------------
+class WThread(threading.Thread):
+    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, daemon=None):
+        threading.Thread.__init__(self, group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
+        self.exc = None
+
+    def run(self):
         try:
-            1/0
+            if self._target:
+                self._target(*self._args, **self._kwargs)
         except Exception as e:
-            self.logger.exception(e)
+            self.exc = e
+
+    def join(self, timeout=None):
+        threading.Thread.join(self, timeout)
+        if self.exc:
+            raise self.exc
     
-    
+#---------------------------
+#     Congiguration file
+#---------------------------
 config = {}
 config = toml.load('config.toml') 
