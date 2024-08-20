@@ -1,0 +1,7 @@
+PiPerW/__pycache__/*
+PiPerW/*.pyc
+PiPerW/*.pyo
+PiPerW/*.pyd
+PiPerW/__pycache__/*
+config.toml
+superwrapper.log
