@@ -1,5 +1,5 @@
-from PiPerW.utils import config, Logging
-import os
+from PiPerW.utils import config, Logging, WThread
+import sys, os
 
 
 log = Logging(config['general']['debug'], os.path.dirname(os.path.abspath(__file__)))
@@ -23,7 +23,13 @@ def init():
         log.info("Setup script imported")
         
         # run setup script
-        PiPerW.setup.install()
+        try:
+            t = WThread(target=PiPerW.setup.install)
+            t.start()
+            t.join()
+        except Exception as e:
+            log.exception("Error running setup script: {}".format(e))
+            sys.exit(1)
         
 
 
