@@ -131,7 +131,7 @@ def app_finder(folder, display, peripherals):
             apps_menu.previous()
             display.draw(apps_menu.generate())
         elif(key == "down"):
-            apps_menu.next()
+            apps_menupu.next()
             display.draw(apps_menu.generate())
         elif(key == "select"):
             print(apps_menu.get_selected())
