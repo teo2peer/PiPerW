@@ -8,7 +8,7 @@ invert = true
 driver = "only_web"
 
 [display_cast]
-default = true
+default = false
 streaming = "ffmpeg"
 
 [network]
@@ -18,6 +18,12 @@ ask_interface = false
 [bluetooth]
 interface = "Conexin de red Bluetooth"
 ask_interface = false
+
+[pheripherals]
+enable_keyboard = true
+enable_pins = false
+enable_web = false
+
 
 [plugins]
 enabled = true
