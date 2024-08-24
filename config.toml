@@ -1,28 +1,24 @@
-[general]               # General configuration settings for the application
-theme = "default"       # The visual theme to be used by the application; "default" is the standard theme
-debug = true            
-first_run = true
+[general]
+theme = "default"
+debug = true
+first_run = false
 
-[display]               # Configuration related to display settings
-invert = false          # True to be upside down
-driver = "sh1106"       # Display driver being used; in this case, it is "sh1106"
+[display]
+invert = true
+driver = "only_web"
 
+[display_cast]
+default = true
+streaming = "ffmpeg"
 
-[display_cast]          # Configuration for display casting 
-default = true          # If set to true, the display casting feature is enabled by default
-streaming = "ffmpeg"    # Specifies the streaming method or tool used for display casting; here, "ffmpeg" is used
-
-
-[wifi] 
-interface = 0        # The network interface for WiFi; if None, no specific interface is set
-ask_interface = true    # If set to true, the application will prompt the user to select a WiFi interface if none is specified
+[network]
+interface = "vEthernet (vlan )"
+ask_interface = false
 
 [bluetooth]
-interface = 0        # The network interface for Bluetooth; if None, no specific interface is set
-ask_interface = true    # If set to true, the application will prompt the user to select a Bluetooth interface if none is specified
-
+interface = "Conexin de red Bluetooth"
+ask_interface = false
 
 [plugins]
-enabled = true          # If set to true, plugins are enabled for the application
-
-folder = "./plugins"    # Specifies the folder where plugins are located; "./plugins" is a relative path 
+enabled = true
+folder = "./plugins"
