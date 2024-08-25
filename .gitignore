@@ -4,4 +4,5 @@ PiPerW/*.pyo
 PiPerW/*.pyd
 PiPerW/__pycache__/*
 config.toml
-superwrapper.log
+output.log
+*.pyc
