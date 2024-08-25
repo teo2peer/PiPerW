@@ -1,6 +1,22 @@
-class Display():
-    def __init__(self):
-        pass
+from PiPerW.utils.Singleton import Singleton
+from PIL import Image, ImageDraw, ImageFont
+import numpy as np
+
+class Display(metaclass=Singleton):
+    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10):
+        self.width = width
+        self.height = height
+        
+        # item height and margins 
+        self.item_height = item_height
+        self.horizontal_margin = horizontal_margin
+        self.vertical_margin = vertical_margin
+        
+        # load default font
+        self.font = ImageFont.load_default()
+        
+        
+        
     
     def init(self):
         pass
@@ -8,11 +24,73 @@ class Display():
     def reset(self):
         pass
     
-    def show_image(self, buffer):
+    # DO NOT MODIFY
+    def draw(self, image):
+        print("Drawing image")
+        # check if image is a buffer, pillow or normal image
+        if type(image) == np.ndarray:
+            image = Image.fromarray(image)
+        elif type(image) != Image.Image:
+            raise ValueError("Image must be a buffer, pillow or normal image")
+        
+        # replace image in PiPerW/tmp
+        image.save("PiPerW/tmp/display.png")
+        self.show(image)
+    
+    def show(self, image):
         pass
     
     def clear(self):
         pass
+    
+    def progress_bar(self, progress, message="", text_on_top = False, color=255):
+        ''' 
+        Display a progress bar in the middle of the screen
+        
+        :param progress: int: Progress in percent
+        :param message: str: Message to display
+        :param color: int: Color of the progress bar (hexadecimal color code)
+        '''
+        
+        height_Bar = 16
+        
+        # Create a new image with white background
+        img = Image.new('1', (self.width, self.height), 0)
+        draw = ImageDraw.Draw(img)
+
+        # Draw the background for the progress bar
+        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
+        draw.rectangle((10, self.height / 2 - (2 + height_Bar / 2), self.width - 10, self.height / 2 + 12), outline=0, fill=255)
+        
+        # Calculate the filled width of the progress bar
+        filled_width = ((self.width-24) * progress / 100)+12
+        draw.rectangle((12, self.height / 2 - (height_Bar / 2), filled_width, self.height / 2 + 10), outline=0, fill=0)
+        
+        # Calculate text size and position
+        text_bbox = draw.textbbox((0, 0), message, font=self.font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        text_x = (self.width - text_width) / 2
+        
+        if text_on_top:
+            text_y = self.height / 2 - 25
+        else:
+            text_y = self.height / 2 + 20
+        
+        # Draw the message below the progress bar
+        draw.text((text_x, text_y), message, font=self.font, fill=color)
+        
+        # Resize image if necessary (usually not needed if dimensions are already correct)
+        img = img.resize((self.width, self.height))
+
+        # Display the image
+        self.draw(img)
+        
+        
+        
+    
+        
+        
     
     def get_buffer(self, image):
         """Convert image to buffer."""
