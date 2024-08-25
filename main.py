@@ -11,7 +11,7 @@ import importlib
 import multiprocessing
 
 
-
+last_activity = 0
 
 def first_run():
     
@@ -84,9 +84,7 @@ def init():
     
     Log.warning("Init pheripherals")
     try:
-        peripherals = importlib.import_module("PiPerW.pheripherals").Pheripherals()
-        peripherals_thread = WThread(target=peripherals.loop)
-        peripherals_thread.start()
+        pheripherals = importlib.import_module("PiPerW.pheripherals").Pheripherals()
     except Exception as e:
         Log.exception("Error initializing pheripherals: {}".format(e))
         sys.exit(1)
@@ -95,16 +93,19 @@ def init():
     display.progress_bar(60, "PiPerW")
 
     # wait for pheripherals to start
-    # peripherals_thread.join()
+    # pheripherals_thread.join()
         
     Log.info("PiPerW initialized")
     menu = MenuFolder(display.width, display.height, "apps")
     display.draw(menu.generate())
     
+    # time.sleep(1) # This solvs the issue of the first key press not being registered? 
+    # Maybe a mutex is needed?
     
     while True:
-        key = peripherals.get_event()
-        print(key)   # FIXME: Issue when not printing key
+        check_last_activity(pheripherals, display)
+        key = pheripherals.get_key()
+        # print(key)   # FIXME: Issue when not printing key
 
         if(key == "up"):
             menu.previous()
@@ -113,34 +114,59 @@ def init():
             menu.next()
             display.draw(menu.generate())
         elif(key == "select"):
-            app_finder(menu.get_selected(), display, peripherals)
-        elif(key == "exit"):
+            app_finder(menu.get_selected(), display, pheripherals)
+            display.draw(menu.generate())
+        elif(key == "back"):
             break
+        
+        
         
         key = None
         
     
     
+def check_last_activity(pheripherals, display):
+    global last_activity
+    if time.time() - pheripherals.timestamp > Config['display']['timeout']:
+        Log.warning("Screen timeout")
+        display.splashscreen()
+        pheripherals.await_key()
+        Log.info("Screen wakeup")
+        last_activity = time.time()
+        display.stop_animation()
+        return True
+    return False
 
-
-def app_finder(folder, display, peripherals):
+def app_finder(folder, display, pheripherals):
     apps = []
     apps_menu = MenuFolder(display.width, display.height, "apps/{}".format(folder))
+    display.draw(apps_menu.generate())
     while True:
-        key = peripherals.get_event()
+        key = pheripherals.get_key()
         if(key == "up"):
             apps_menu.previous()
             display.draw(apps_menu.generate())
         elif(key == "down"):
-            apps_menupu.next()
+            apps_menu.next()
             display.draw(apps_menu.generate())
         elif(key == "select"):
-            print(apps_menu.get_selected())
-        elif(key == "exit"):
+            display.text("Loading\n{}".format(apps_menu.get_selected()))
+        elif(key == "back"):
             break
         
         key = None
 
+def execute_app(app):
+    importlib.import_module("PiPerW.apps.{}".format(app)).app
+    
+    try:
+        app = importlib.import_module("PiPerW.apps.{}".format(app)).app
+        WThread(target=app.run).start()
+    except Exception as e:
+        Log.exception("Error running app {}: {}".format(app,e))
+        display.text("Error running app {}: ".format(app))
+        pheripherals.await_key()
+        sys.exit(1)
 
 
 
