@@ -104,7 +104,8 @@ def init():
     
     while True:
         key = peripherals.get_event()
-        print(key)
+        print(key)   # FIXME: Issue when not printing key
+
         if(key == "up"):
             menu.previous()
             display.draw(menu.generate())
