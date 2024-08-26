@@ -123,7 +123,8 @@ class WThread(threading.Thread):
 #     Congiguration file
 #---------------------------
 Config = {}
-Config = toml.load('Config.toml') 
+Config = toml.load('config.toml')  
+
 
 def save_config():
     '''
