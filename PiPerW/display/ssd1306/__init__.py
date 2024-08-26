@@ -4,7 +4,7 @@ from luma.core.interface.serial import i2c, spi
 from luma.core.render import canvas
 from luma.core import lib
 
-from luma.oled.device import sh1106
+from luma.oled.device import ssd1306
 import sys, time, subprocess, os, string
 
 from PIL import Image
@@ -57,7 +57,7 @@ class Driver(DisplayInterface):
     def show(self):
         """Show the image on the display."""
         serial = spi(device=0, port=0, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC_PIN, gpio_RST = RST_PIN)
-        device = sh1106(serial, rotate=2) #sh1106
+        device = ssd1306(serial, rotate=2) #ssd1306
         
         
 
