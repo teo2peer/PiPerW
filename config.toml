@@ -6,6 +6,7 @@ first_run = false
 [display]
 invert = true
 driver = "only_web"
+timeout = 10
 
 [display_cast]
 default = false
