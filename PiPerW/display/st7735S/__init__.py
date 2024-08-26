@@ -59,6 +59,8 @@ class Driver(DisplayInterface):
         
         super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin, "RGB")
         
+        # draw a black filled box to clear the image
+        self.clear()
 
         
     def command(self, cmd):
