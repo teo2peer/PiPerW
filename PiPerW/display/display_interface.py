@@ -8,7 +8,7 @@ import time
 
 
 class DisplayInterface(metaclass=Singleton):
-    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10, type="1"):
+    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10, type="b"):
         self.width = width
         self.height = height
         
@@ -52,6 +52,8 @@ class DisplayInterface(metaclass=Singleton):
         
         # replace image in PiPerW/tmp
         image.save("PiPerW/tmp/display.png")
+        if(self.type == "RGB"):
+            image = self.convert_to_rgb(image)
         self.show(image)
         
     def image(self, image):
@@ -69,7 +71,7 @@ class DisplayInterface(metaclass=Singleton):
             image.thumbnail((self.width, self.height))
             
         # convert to bmp
-        image = image.convert(self.type)
+        image = image.convert('1')
         
         # Display the image
         self.draw(image)
@@ -197,7 +199,7 @@ class DisplayInterface(metaclass=Singleton):
     def get_buffer(self, image):
         """Convert image to buffer."""
         buf = np.full((self.width // 8) * self.height, 0xFF, dtype=np.uint8)
-        image_monocolor = image.convert(self.type)
+        image_monocolor = image.convert('1')
         imwidth, imheight = image_monocolor.size
         pixels = np.array(image_monocolor)
 
@@ -214,3 +216,9 @@ class DisplayInterface(metaclass=Singleton):
                     if pixels[y, x] == 0:
                         buf[newx + (newy // 8) * self.width] &= ~(1 << (y % 8))
         return buf
+    
+    def convert_to_rgb(self, image):
+        """Convert bmp to rgb."""
+        image = image.convert('RGB')
+        return image
+    

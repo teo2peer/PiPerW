@@ -40,7 +40,7 @@ class Driver(DisplayInterface):
         self.vertical_margin = 10
         
         
-        super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin, "1")
+        super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin, "b")
         
         # Initialize DC and RST pins
         self._dc = self.DC_PIN
