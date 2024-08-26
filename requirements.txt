@@ -5,3 +5,4 @@ flask
 pillow
 RPi.GPIO
 colorlog
+keyboard
