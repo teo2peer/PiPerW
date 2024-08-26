@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from PiPerW.display.display_interface import Display
+from PiPerW.display.display_interface import DisplayInterface
 from luma.core.interface.serial import i2c, spi
 from luma.core.render import canvas
 from luma.core import lib
@@ -18,7 +18,7 @@ import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM) 
 
 
-class SH1106(Display):
+class Driver(DisplayInterface):
     super().__init__(128, 64)
     
     #GPIO define
