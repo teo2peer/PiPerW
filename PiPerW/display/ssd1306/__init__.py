@@ -19,31 +19,37 @@ GPIO.setmode(GPIO.BCM)
 
 
 class Driver(DisplayInterface):
-    super().__init__(128, 64)
-    
-    #GPIO define
-    self.RST_PIN  = 25 #Reset
-    self.CS_PIN   = 8
-    self.DC_PIN   = 24
-
-    # Some constants
-    self.SCREEN_LINES = 4
-    self.CHAR_WIDTH = 19
     
     
 
     def __init__(self):
-        self.width = self.LCD_WIDTH
-        self.height = self.LCD_HEIGHT
+        #GPIO define
+        self.RST_PIN  = 25 #Reset
+        self.CS_PIN   = 8
+        self.DC_PIN   = 24
+
+        # Some constants
+        self.SCREEN_LINES = 4
+        self.CHAR_WIDTH = 19
         
-
-
+        
+        self.width = 128
+        self.height = 64
+        self.item_height = 16
+        self.horizontal_margin = 10
+        self.vertical_margin = 10
+        
+        
+        super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin)
+        
         # Initialize DC and RST pins
         self._dc = self.DC_PIN
         self._rst = self.RST_PIN
-        self.Device = self.CS_PIN
+        self.cs = self.CS_PIN
         self.font = ImageFont.load_default()
         
+        self.serial = i2c(port=1, address=0x3C)
+        self.device = ssd1306(self.serial, rotate=2) #ssd1306
 
         
     def command(self, cmd):
@@ -53,11 +59,6 @@ class Driver(DisplayInterface):
             self.RPI.spi_writebyte([cmd])
         else:
             self.RPI.i2c_writebyte(0x80, cmd)
-
-    def show(self):
-        """Show the image on the display."""
-        serial = spi(device=0, port=0, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC_PIN, gpio_RST = RST_PIN)
-        device = ssd1306(serial, rotate=2) #ssd1306
         
         
 
@@ -72,13 +73,13 @@ class Driver(DisplayInterface):
 
     def show(self, image):
         """Show an image on the display."""
-        with canvas(device) as draw:
+        with canvas(self.device) as draw:
             draw.bitmap((0, 0), image, fill=255)
             
         
 
     def clear(self):
         """Clear the display."""
-        with canvas(device) as draw:
-            draw.rectangle(device.bounding_box, outline="black", fill="black")
+        with canvas(self.device) as draw:
+            draw.rectangle(self.device.bounding_box, outline="black", fill="black")
 
