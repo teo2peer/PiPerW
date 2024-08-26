@@ -25,10 +25,7 @@ class Driver(DisplayInterface):
     def __init__(self):
         
         
-       
 
-        
-        
         self.item_height = 32
         self.horizontal_margin = 10
         self.vertical_margin = 10
@@ -58,7 +55,7 @@ class Driver(DisplayInterface):
         self.width = self.device.width
         self.height = self.device.height
         
-        super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin)
+        super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin, "RGB")
         
 
         

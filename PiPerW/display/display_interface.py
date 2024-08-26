@@ -8,7 +8,7 @@ import time
 
 
 class DisplayInterface(metaclass=Singleton):
-    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10):
+    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10, type="1"):
         self.width = width
         self.height = height
         
@@ -16,6 +16,7 @@ class DisplayInterface(metaclass=Singleton):
         self.item_height = item_height
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
+        self.type = type
         
         # load default font
         self.font = ImageFont.load_default()
@@ -68,7 +69,7 @@ class DisplayInterface(metaclass=Singleton):
             image.thumbnail((self.width, self.height))
             
         # convert to bmp
-        image = image.convert('1')
+        image = image.convert(self.type)
         
         # Display the image
         self.draw(image)
@@ -196,7 +197,7 @@ class DisplayInterface(metaclass=Singleton):
     def get_buffer(self, image):
         """Convert image to buffer."""
         buf = np.full((self.width // 8) * self.height, 0xFF, dtype=np.uint8)
-        image_monocolor = image.convert('1')
+        image_monocolor = image.convert(self.type)
         imwidth, imheight = image_monocolor.size
         pixels = np.array(image_monocolor)
 
