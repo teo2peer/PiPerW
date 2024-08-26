@@ -4,3 +4,4 @@ luma.oled
 flask
 pillow
 RPi.GPIO
+colorlog
