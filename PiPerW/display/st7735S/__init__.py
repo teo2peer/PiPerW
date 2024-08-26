@@ -40,12 +40,14 @@ class Driver(DisplayInterface):
         self.cs_pin = digitalio.DigitalInOut(board.CE0)
         self.dc_pin = digitalio.DigitalInOut(board.D25)
         self.reset_pin = digitalio.DigitalInOut(board.D24)
+        # self.light_pin = digitalio.DigitalInOut(board.D22)
         
         self.BAUDRATE = 24000000
         
         self.spi = board.SPI()
         self.device = st7735.ST7735(
             self.spi, 
+            rotation=90,
             cs=self.cs_pin, 
             dc=self.dc_pin, 
             rst=self.reset_pin, 

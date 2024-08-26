@@ -219,6 +219,7 @@ class DisplayInterface(metaclass=Singleton):
     
     def convert_to_rgb(self, image):
         """Convert bmp to rgb."""
-        image = image.convert('RGB')
+        image = Image.new('RGB', image.size)
+        image.paste((255, 255, 255), (0, 0, image.width, image.height))
         return image
     
