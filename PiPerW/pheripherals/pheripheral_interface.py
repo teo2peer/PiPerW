@@ -21,6 +21,8 @@ class Pheripheral:
     def get_key(self):
         return self.key, self.timestamp
     
+
+    
     def log_key(self, key: PheripheralAction):
         
         self.key = key
