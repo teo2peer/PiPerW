@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from PiPerW.display.display_interface import Display
+from PiPerW.display.display_interface import DisplayInterface
 
 import sys, time, subprocess, os, string
 
@@ -9,9 +9,9 @@ from PIL import ImageFont
 
 
 
-class OnlyWeb(Display):
+class Driver(DisplayInterface):
     
-    def OnlyWeb(self):
+    def __init__(self):
         self.width = self.LCD_WIDTH
         self.height = self.LCD_HEIGHT
         self.item_height = 32
@@ -38,4 +38,3 @@ class OnlyWeb(Display):
         pass
     
 
-Driver = OnlyWeb()
