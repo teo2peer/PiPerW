@@ -1,8 +1,13 @@
 from PiPerW.utils.Singleton import Singleton
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
+import importlib
+from PiPerW.helpers import WThread, Config, Log 
+import time
 
-class Display(metaclass=Singleton):
+
+
+class DisplayInterface(metaclass=Singleton):
     def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10):
         self.width = width
         self.height = height
@@ -15,14 +20,25 @@ class Display(metaclass=Singleton):
         # load default font
         self.font = ImageFont.load_default()
         
+        try:
+            self.theme = importlib.import_module("PiPerW.themes.{}".format(Config['general']['theme'])).Theme()
+        except Exception as e:
+            Log.exception("Error loading theme: {}".format(e))
+            sys.exit(1)
         
         
+        self.trhead = None
+        
+        
+    
+    
     
     def init(self):
         pass
     
     def reset(self):
         pass
+    
     
     # DO NOT MODIFY
     def draw(self, image):
@@ -36,12 +52,68 @@ class Display(metaclass=Singleton):
         # replace image in PiPerW/tmp
         image.save("PiPerW/tmp/display.png")
         self.show(image)
+        
+    def image(self, image):
+        '''
+        Display an image
+        
+        :param image: Image: Image to display
+        '''
+        
+        if type(image) == str:
+            image = Image.open(image)
+        
+        # Resize with same aspect ratio
+        if image.size != (self.width, self.height):
+            image.thumbnail((self.width, self.height))
+            
+        # convert to bmp
+        image = image.convert('1')
+        
+        # Display the image
+        self.draw(image)
+            
     
     def show(self, image):
         pass
     
     def clear(self):
         pass
+    
+    def splashscreen(self):
+        '''
+        Display the splashscreen
+        '''
+        self.thread = WThread(target=self.loop_splashscreen)
+        self.thread.start()
+        
+        
+    
+    def loop_splashscreen(self):
+        '''
+        Loop through the frames of the splashscreen
+        
+        :param theme: Theme: The theme to display
+        '''
+
+        while True:
+            
+            # check if thread is stopped
+            if self.thread.stopped():
+                break
+            
+            frame = self.theme.next_frame()
+            self.image(frame)
+            time.sleep(0.05)
+            
+    def stop_animation(self):
+        '''
+        Stop the splashscreen animation
+        '''
+        if self.thread:
+            self.thread.stop()
+            self.thread.join()
+            self.thread = None
     
     def progress_bar(self, progress, message="", text_on_top = False, color=255):
         ''' 
@@ -85,6 +157,35 @@ class Display(metaclass=Singleton):
 
         # Display the image
         self.draw(img)
+        
+        
+    def text(self, text):
+        '''
+        Display a text in the middle of the screen
+        
+        :param text: str: Text to display
+        '''
+        
+        # Create a new image with black background
+        img = Image.new('1', (self.width, self.height), 0)
+        draw = ImageDraw.Draw(img)
+        
+        # Calculate text size and position
+        text_bbox = draw.textbbox((0, 0), text, font=self.font)
+        text_width = text_bbox[2] - text_bbox[0]
+        text_height = text_bbox[3] - text_bbox[1]
+        text_x = (self.width - text_width) / 2
+        text_y = (self.height - text_height) / 2
+        
+        # Draw the text in the middle of the screen
+        draw.text((text_x, text_y), text, font=self.font, fill=255)
+        
+        # Resize image if necessary (usually not needed if dimensions are already correct)
+        img = img.resize((self.width, self.height))
+        
+        # Display the image
+        self.draw(img)
+        
         
         
         
