@@ -6,3 +6,4 @@ pillow
 RPi.GPIO
 colorlog
 keyboard
+adafruit-circuitpython-rgb-display
