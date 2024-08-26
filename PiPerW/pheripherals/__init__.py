@@ -1,5 +1,4 @@
-from PiPerW.helpers import Config
-from PiPerW.helpers import Log
+from PiPerW.helpers import Config, Log, WThread
 from PiPerW.pheripherals.pheripheral_interface import PheripheralAction
 from PiPerW.utils.Singleton import Singleton
 import importlib
@@ -16,6 +15,14 @@ class Pheripherals(metaclass=Singleton):
         
         if Config['pheripherals']['enable_keyboard']:
             self.register_controller("keyboard")
+        
+        try:
+            trhead = WThread(target=self.loop)
+            trhead.start()
+            time.sleep(1)
+        except Exception as e:
+            Log.exception("Error initializing pheripherals: {}".format(e))
+            sys.exit(1)
     
     def register_controller(self, controller):
         Log.warning("Registering controller: {}".format(controller))
@@ -23,10 +30,21 @@ class Pheripherals(metaclass=Singleton):
         
         self.controllers.append(module)
         
-    def get_event(self):
+    def get_key(self):
         key = self.key.value if self.key else None
         self.key = None
         return key
+    
+    def await_key(self):
+        self.key = None
+        while not self.key:
+            time.sleep(0.1)
+        return self.key
+
+    def await_any_key_press(self):
+        self.await_key()
+        self.key = None
+        
         
     def loop(self):
         Log.info("Pheripherals loop started")
