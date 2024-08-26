@@ -4,9 +4,7 @@ import sys
 from PiPerW.utils.Singleton import Singleton
 import inspect
 
-file_handler = logging.FileHandler('output.log')
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
+
 #---------------------------
 #     Logging class
 #---------------------------
@@ -22,6 +20,18 @@ class Logging(metaclass=Singleton):
         # Initialize class variables
         self.debug = debug
         self.relative_path = relative_path
+
+        # rename output.log to output.old.log
+        try:
+            with open('output.log', 'r') as f:
+                pass
+            os.rename('output.log', 'output.old.log')
+        except:
+            pass
+        
+        self.file_handler = logging.FileHandler('output.log')
+        self.console_handler = logging.StreamHandler(sys.stdout)
+        self.console_handler.setLevel(logging.INFO)
 
         # Set the log level for the logger
         LOG_LEVEL = logging.DEBUG
@@ -45,10 +55,10 @@ class Logging(metaclass=Singleton):
                                             datefmt='%Y-%m-%d %H:%M:%S')
 
         # Example file handler (commented out because 'file_handler' and 'console_handler' are not defined)
-        file_handler.setFormatter(standard_formatter)
+        self.file_handler.setFormatter(standard_formatter)
 
         # Add handlers 
-        self.logger.addHandler(file_handler)
+        self.logger.addHandler(self.file_handler)
         
         # Display debug messages if debug is enabled
         if self.debug:
