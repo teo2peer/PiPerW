@@ -84,6 +84,9 @@ class Driver(DisplayInterface):
 
     def clear(self):
         """Clear the display."""
-        self.device.fill(0)
-        self.device.show()
+        image = Image.new("RGB", (self.width, self.height), 0)
+        draw = ImageDraw.Draw(image)
+        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
+        
+        self.show(image)
 
