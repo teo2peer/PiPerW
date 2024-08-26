@@ -27,13 +27,20 @@ class Menu:
         self.vertical_margin = vertical_margin
         self.item_height = item_height
         self.padding = item_padding
+        
+        self.selected_item_padding = 6
+        self.selected_item_border_thickness = 2
+        
         self.background_color = background_color
         self.accent_color = accent_color
+        
+        self.max_items_on_screen = (self.height - 2 * self.vertical_margin) // (self.item_height + self.padding)
         
         self.items =  []
         self.icons = icons
         self.texts =  texts
         
+        self.start_index = 0
         self.index = 0
         
         Log.info("Creating menu items")
@@ -96,8 +103,8 @@ class Menu:
         :return: Image: The image with the selected item highlighted
         '''
         
-        border_thickness = 2
-        padding = 6
+        border_thickness = self.selected_item_border_thickness
+        padding = self.selected_item_padding
         
         # Create a new image for the border, slightly larger than the item
         border_width = self.width - self.horizontal_margin
@@ -129,37 +136,50 @@ class Menu:
     def generate(self, icons=None, color=255, background_color=0):
         '''
         Generate a menu with selectable items and rounded borders for the selected item.
-
-        :param icons: list: List of icons for each item
-        :param color: int: Color of the text (single channel, e.g., 255 for white)
-        :param background_color: int: Background color of the menu (single channel, e.g., 0 for black)
+        Ensure the next item is partially visible if there are more items available.
+        The last item is fully displayed only if it is the selected item.
         '''
-
+        
         img = Image.new('1', (self.width, self.height), background_color)
         draw = ImageDraw.Draw(img)
-        
+
+        # Adjust the start_index if necessary
+        if self.index >= self.start_index + self.max_items_on_screen:
+            self.start_index = self.index - self.max_items_on_screen + 1
+        elif self.index < self.start_index:
+            self.start_index = self.index
+
         # Calculate the y position of the first item
         y = self.vertical_margin
         x = self.horizontal_margin
-        # Draw the background for the menu
-        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=background_color)
-        
+
+        # Determine how many items to draw (add one extra to partially show the next item)
+        end_index = min(self.start_index + self.max_items_on_screen + 1, len(self.items))
+
         # Draw the menu items
-        for i in range(len(self.items)):
-            item = self.items[i]
-            
-            # Draw the selected item with a rounded rectangle
-            if i == self.index:
-                item = self.selected_item(item)
-                img.paste(item, (x, y))
-            else:
-                # Paste the item into the menu with margin
-                img.paste(item, (x, y+6))
-            
-            y += self.item_height + self.padding
         
-        
-        # rerturn the image
+
+        # Handle the last item being fully displayed only if selected
+        if end_index >= len(self.items):
+            last_item_y = self.height - self.padding - self.item_height - self.vertical_margin
+            if self.index == len(self.items) - 1:
+                # The last item is selected, display it fully
+                img.paste(self.selected_item(self.items[-1]), (x, last_item_y))
+                # the previous item is not selected, display it partially
+                img.paste(self.items[-2], (x, last_item_y - (self.item_height + self.padding) + 6))
+        else:
+            for i in range(self.start_index, end_index):
+                item = self.items[i]
+
+                # Draw the selected item with a rounded rectangle
+                if i == self.index:
+                    item = self.selected_item(item)
+                    img.paste(item, (x, y))
+                else:
+                    img.paste(item, (x, y + 6))
+
+                y += self.item_height + self.padding
+
         return img
         
         
