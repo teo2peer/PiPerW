@@ -45,17 +45,23 @@ class Driver(DisplayInterface):
         self.BAUDRATE = 24000000
         
         self.spi = board.SPI()
-        self.device = st7735.ST7735(
+        self.device = st7735.ST7735R(
             self.spi, 
-            rotation=90,
-            cs=self.cs_pin, 
-            dc=self.dc_pin, 
-            rst=self.reset_pin, 
+            rotation=90,                           # 1.8" ST7735R
+            cs=self.cs_pin,
+            dc=self.dc_pin,
+            rst=self.reset_pin,
             baudrate=self.BAUDRATE
         )
-        
         self.width = self.device.width
         self.height = self.device.height
+        
+        if self.device.rotation % 180 == 90:
+            self.height = self.device.width  # we swap height/width to rotate it to landscape!
+            self.width = self.device.height
+        else:
+            self.width = self.device.width  # we swap height/width to rotate it to landscape!
+            self.height = self.device.height    
         
         super().__init__(self.width, self.height, self.item_height, self.horizontal_margin, self.vertical_margin, "RGB")
         
@@ -85,9 +91,10 @@ class Driver(DisplayInterface):
 
     def clear(self):
         """Clear the display."""
-        image = Image.new("RGB", (self.width, self.height), 0)
+        image = Image.new("RGB", (self.width, self.height), (0, 0, 0))
         draw = ImageDraw.Draw(image)
-        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
+        # black background
+        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=(0, 0, 0))
         
         self.show(image)
 
