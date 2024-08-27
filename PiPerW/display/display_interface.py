@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import importlib
 from PiPerW.helpers import WThread, Config, Log 
-import time
+import os, time
 
 
 
@@ -54,7 +54,11 @@ class DisplayInterface(metaclass=Singleton):
         if(self.type == "RGB"):
             image = self.convert_to_rgb(image)
             
-        # replace image in PiPerW/tmp
+        
+        # replace or create image in PiPerW/tmp
+        # create tmp folder if not exists
+        if not os.path.exists("PiPerW/tmp"):
+            os.makedirs("PiPerW/tmp")
         image.save("PiPerW/tmp/display.png")
         
         self.show(image)

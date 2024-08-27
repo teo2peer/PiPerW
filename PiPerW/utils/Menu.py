@@ -35,10 +35,10 @@ class Menu:
         self.accent_color = accent_color
         
         self.max_items_on_screen = (self.height - 2 * self.vertical_margin) // (self.item_height + self.padding)
-        
         self.items =  []
         self.icons = icons
         self.texts =  texts
+        
         
         self.start_index = 0
         self.index = 0
@@ -160,18 +160,22 @@ class Menu:
         
 
         # Handle the last item being fully displayed only if selected
-        if end_index >= len(self.items) and len(self.items) > self.max_items_on_screen:
+        if self.index == len(self.items) - 1 and  end_index >= len(self.items) and len(self.items) > self.max_items_on_screen:
             last_item_y = self.height - self.padding - self.item_height - self.vertical_margin
-            if self.index == len(self.items) - 1:
-                # The last item is selected, display it fully
-                img.paste(self.selected_item(self.items[-1]), (x, last_item_y))
-                # the previous item is not selected, display it partially
-                img.paste(self.items[-2], (x, last_item_y - (self.item_height + self.padding) + 6))
-            else:
-                # The last item is not selected, display it partially
-                penultimate_item_y = last_item_y - (self.item_height + self.padding)
-                img.paste(self.items[-2], (x, penultimate_item_y + 6))
-                img.paste(self.items[-1], (x, last_item_y + 6))
+            
+            
+            # The last item is selected, display it fully
+            img.paste(self.selected_item(self.items[-1]), (x, last_item_y))
+            # the previous item is not selected, display it partially
+            img.paste(self.items[-2], (x, last_item_y - (self.item_height + self.padding)))
+            
+            
+            # print the rest of the items in the menu from down to up
+            for i in range(end_index - 3, self.start_index - 1, -1):
+                item = self.items[i]
+                img.paste(item, (x, last_item_y - (self.item_height + self.padding) * (end_index - i - 1)))
+                
+            
         else:
             for i in range(self.start_index, end_index):
                 item = self.items[i]
