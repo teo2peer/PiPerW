@@ -59,7 +59,7 @@ class App(AppInterface):
         
         
         self.screen_and_log("Scanning for networks\n\nPress any key to stop")
-        scan = subprocess.run(["sudo", "airodump-ng", Config['network']['interface'], "--output-format", "csv", "-w", "PiPerW/tmp/scan"])
+        scan = subprocess.run(["sudo", "airodump-ng", Config['network']['interface'], "--output-format", "csv", "-w", "PiPerW/tmp"])
         
         pheripherals.await_any_key_press()
         
