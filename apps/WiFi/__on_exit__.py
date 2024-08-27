@@ -9,4 +9,7 @@ class Execute:
         '''
         
         os.system("sudo airmon-ng stop {}mon".format(Config['network']['interface']))
-        os.system("sudo systemctl restart NetworkManager")
+        os.system("sudo ifconfig {} down".format(Config['network']['interface']))
+        os.system("sudo iwconfig {} mode managed".format(Config['network']['interface']))
+        os.system("sudo ifconfig {} up".format(Config['network']['interface']))
+        os.system("sudo service NetworkManager start")
