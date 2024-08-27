@@ -3,7 +3,6 @@ import os
 import psutil
 
 
-Log = Logging()
 
 def install():
     

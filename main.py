@@ -20,14 +20,14 @@ def first_run():
     try:
         setup = importlib.import_module("PiPerW.setup")
         Log.info("Setup script imported")
-        with WThread(target=setup.install) as t:
-            t.start()
-            t.join()
+        instrall_func = WThread(target=setup.install)
+        instrall_func.start()
+        instrall_func.join()
         
         # Install packages
         Log.info("Installing packages")
         os.system("sudo apt update && sudo apt upgrade -y")
-        os.system("./install.sh")
+        
         
         # Restart program
         Log.info("Restarting PiPerW")
