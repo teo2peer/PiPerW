@@ -49,6 +49,8 @@ class App(AppInterface):
         self.screen_and_log("Enabling Monitor Mode")
         monitor_mode = subprocess.run(["sudo", "airmon-ng", "start", Config['network']['interface']])
         
+        time.sleep(5)
+        
         self.screen_and_log("Checking if monitor mode is enabled")
         res = os.popen("iwconfig").read()
         if "mon" not in res:
