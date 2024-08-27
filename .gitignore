@@ -7,3 +7,5 @@ config.toml
 output.log
 *.pyc
 test.py
+config.toml
+PiPerW/tmp/display.png
