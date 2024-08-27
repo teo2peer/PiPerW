@@ -14,11 +14,11 @@ streaming = "ffmpeg"
 
 [network]
 interface = false
-ask_interface = false
+ask_interface = true
 
 [bluetooth]
 interface = false
-ask_interface = false
+ask_interface = true
 
 [pheripherals]
 enable_keyboard = true

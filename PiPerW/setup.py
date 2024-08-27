@@ -82,7 +82,7 @@ def install():
         Config['bluetooth']['ask_interface'] = False
     
     Config['general']['first_run'] = False
-    save_Config()
+    save_config()
     
     
     
