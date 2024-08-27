@@ -52,6 +52,13 @@ class DirFilter:
         '''
         return [f for f in os.listdir(self.dir) if os.path.isdir(os.path.join(self.dir, f))]
     
+    def dirs(self):
+        '''
+        Get all directories and files in a directory
+        
+        :return: list: List of directories and files
+        '''
+        return self.folders() 
 
 #---------------------------
 #     SECTION HEADER
