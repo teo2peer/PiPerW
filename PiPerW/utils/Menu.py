@@ -170,7 +170,7 @@ class Menu:
             y += self.item_height + self.padding
 
         # Handle the last item being fully displayed only if selected
-        if end_index >= len(self.items):
+        if end_index >= len(self.items) and len(self.items) > self.max_items_on_screen:
             last_item_y = self.height - self.padding - self.item_height - self.vertical_margin
             if self.index == len(self.items) - 1:
                 # The last item is selected, display it fully
