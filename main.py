@@ -66,6 +66,16 @@ def initialize_peripherals():
 
 def init():
     Log.info("Initializing PiPerW")
+    
+    # cehck if is windows
+    if os.name == "nt":
+        Log.error("PiPerW is not compatible with Windows, but development can be done with limited functionality")
+
+    else:
+        if  'SUDO_UID' not in os.environ.keys():
+            Log.error("Not running as root, exiting")
+            sys.exit(1)
+        
 
     if Config['general']['first_run']:
         first_run()
@@ -142,7 +152,7 @@ def execute_app(app, folder, pheripherals):
         t.join()
     except Exception as e:
         Log.exception(f"App crashed\n{app}: {e}")
-        Display.text(f"Error running app\n{app}\n\nLog in output.log")
+        Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
         pheripherals.await_any_key_press()
         
 
