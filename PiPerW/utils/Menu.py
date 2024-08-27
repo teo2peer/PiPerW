@@ -157,17 +157,7 @@ class Menu:
         end_index = min(self.start_index + self.max_items_on_screen + 1, len(self.items))
 
         # Draw the menu items
-        for i in range(self.start_index, end_index):
-            item = self.items[i]
-
-            # Draw the selected item with a rounded rectangle
-            if i == self.index:
-                item = self.selected_item(item)
-                img.paste(item, (x, y))
-            else:
-                img.paste(item, (x, y + 6))
-
-            y += self.item_height + self.padding
+        
 
         # Handle the last item being fully displayed only if selected
         if end_index >= len(self.items) and len(self.items) > self.max_items_on_screen:
@@ -182,7 +172,18 @@ class Menu:
                 penultimate_item_y = last_item_y - (self.item_height + self.padding)
                 img.paste(self.items[-2], (x, penultimate_item_y + 6))
                 img.paste(self.items[-1], (x, last_item_y + 6))
+        else:
+            for i in range(self.start_index, end_index):
+                item = self.items[i]
 
+                # Draw the selected item with a rounded rectangle
+                if i == self.index:
+                    item = self.selected_item(item)
+                    img.paste(item, (x, y))
+                else:
+                    img.paste(item, (x, y + 6))
+
+                y += self.item_height + self.padding
         return img
         
         
