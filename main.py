@@ -155,6 +155,14 @@ def execute_app(app, folder, pheripherals):
         Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
         pheripherals.await_any_key_press()
         
+    # check if exist in folder __on_exit__.py
+    try:
+        Display.text("Executing on exit script")
+        on_exit = importlib.import_module(f"apps.{folder}.__on_exit__").Execute()
+        on_exit.__init__()
+    except ImportError:
+        pass
+        
 
 if __name__ == "__main__":
     try:
