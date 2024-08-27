@@ -122,6 +122,10 @@ class WThread(threading.Thread):
 #---------------------------
 #     Congiguration file
 #---------------------------
+# check if the config file exists
+if not os.path.exists('config.toml'):
+    # copy the default config file
+    os.system('cp config.toml.example config.toml')
 Config = {}
 Config = toml.load('config.toml')  
 
