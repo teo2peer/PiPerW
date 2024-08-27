@@ -7,6 +7,9 @@ Log = Logging()
 
 def install():
     
+    # create tmp folder if not exists
+    if not os.path.exists("PiPerW/tmp"):
+        os.makedirs("PiPerW/tmp")
     
     # ---------------------------
     #     Theme Configurator
