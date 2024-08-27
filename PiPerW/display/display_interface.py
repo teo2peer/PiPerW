@@ -50,10 +50,13 @@ class DisplayInterface(metaclass=Singleton):
         elif type(image) != Image.Image:
             raise ValueError("Image must be a buffer, pillow or normal image")
         
-        # replace image in PiPerW/tmp
-        image.save("PiPerW/tmp/display.png")
+        # Resize with same aspect ratio
         if(self.type == "RGB"):
             image = self.convert_to_rgb(image)
+            
+        # replace image in PiPerW/tmp
+        image.save("PiPerW/tmp/display.png")
+        
         self.show(image)
         
     def image(self, image):
@@ -104,8 +107,14 @@ class DisplayInterface(metaclass=Singleton):
             # check if thread is stopped
             if self.thread.stopped():
                 break
-            
+                
             frame = self.theme.next_frame()
+            
+            
+            # resize the image to cover the whole screen
+            frame = frame.resize((self.width, self.height))
+            
+            
             self.image(frame)
             time.sleep(0.05)
             
@@ -218,8 +227,11 @@ class DisplayInterface(metaclass=Singleton):
         return buf
     
     def convert_to_rgb(self, image):
-        """Convert bmp to rgb."""
-        image = Image.new('RGB', image.size)
-        image.paste((255, 255, 255), (0, 0, image.width, image.height))
+        '''Convert image to RGB
+        
+        :param image: Image: Image to convert
+        :return: Image: Converted image
+        '''
+        image = image.convert('RGB')
         return image
     

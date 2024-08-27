@@ -7,3 +7,4 @@ RPi.GPIO
 colorlog
 keyboard
 adafruit-circuitpython-rgb-display
+qrcode

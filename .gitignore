@@ -6,3 +6,4 @@ PiPerW/__pycache__/*
 config.toml
 output.log
 *.pyc
+test.py
