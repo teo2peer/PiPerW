@@ -1,4 +1,4 @@
-from PiPerW.helpers import Config, Log, DirFilter, Selector, save_Config
+from PiPerW.helpers import Config, Log, DirFilter, Selector, save_config
 import os
 import psutil
 
