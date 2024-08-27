@@ -142,7 +142,7 @@ def save_config():
     Save the Configuration file
     '''
     Log.info("Saving configuration file")
-    with open('Config.toml', 'w') as f:
+    with open('config.toml', 'w') as f:
         toml.dump(Config, f)
         
 
