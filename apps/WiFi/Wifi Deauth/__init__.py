@@ -11,7 +11,7 @@ from PiPerW.apps.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 from PiPerW.helpers import Log, Config
-from PiPerW.utils.menu import Menu
+from PiPerW.utils.Menu import Menu
 import os, time, subprocess
 import csv
 import shutil
