@@ -140,7 +140,7 @@ def app_finder(folder, pheripherals):
         elif key == "select":
             execute_app(apps_menu.get_selected(), folder, pheripherals)
             Display.draw(apps_menu.generate())
-        elif key == "back":
+        elif key == "back" or key == "exit":
             break
 
 def execute_app(app, folder, pheripherals):

@@ -247,8 +247,10 @@ class MenuFolder(Menu):
         # get the icon of each folder
         icons = []
         for folder in folders:
-            # check if icon exists
+            if folder == "__pycache__":
+                continue
             
+            # check if icon exists
             if not os.path.exists(f"{parent_folder}/{folder}/icon.bmp"):
                 Log.warning(f"Icon not found for folder {folder}")
                 icon = Image.open("PiPerW/display/no.bmp")
