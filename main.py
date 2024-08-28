@@ -91,7 +91,7 @@ def init():
     Display.progress_bar(60, "PiPerW")
 
     Log.info("PiPerW initialized")
-    menu = MenuFolder(Display.width, Display.height, "apps")
+    menu = MenuFolder(Display.width, Display.height, "apps", item_height=Display.item_height)
     Display.draw(menu.generate())
 
     while True:
@@ -131,7 +131,7 @@ def handle_menu_navigation(key, menu, pheripherals):
     Display.draw(menu.generate())
 
 def app_finder(folder, pheripherals):
-    apps_menu = MenuFolder(Display.width, Display.height, f"apps/{folder}")
+    apps_menu = MenuFolder(Display.width, Display.height, f"apps/{folder}", item_height=Display.item_height)
     Display.draw(apps_menu.generate())
     while True:
         key = pheripherals.get_key()
