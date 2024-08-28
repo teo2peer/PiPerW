@@ -1,4 +1,4 @@
-from PiPerW.helpers import Config, Log, WThread
+from PiPerW.helpers import Config, Log, WThread, save_config
 from PiPerW.pheripherals.pheripheral_interface import PheripheralAction
 from PiPerW.utils.Singleton import Singleton
 import importlib
@@ -13,10 +13,16 @@ class Pheripherals(metaclass=Singleton):
         self.key = None
         self.timestamp = 0
         
-        if Config['pheripherals']['enabled']:
+        if Config['pheripherals']['controllers']:
             for controller in Config['pheripherals']['controllers']:
                 self.register_controller(controller)
-        
+        else:
+            Log.warning("No controllers defined in config file")
+            Log.warning("Adding default keyboard controller")
+            Config['pheripherals']['controllers'] = ['keyboard']
+            save_config()
+            register_controller('keyboard')
+            
         try:
             trhead = WThread(target=self.loop)
             trhead.start()
