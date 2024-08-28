@@ -13,8 +13,9 @@ class Pheripherals(metaclass=Singleton):
         self.key = None
         self.timestamp = 0
         
-        if Config['pheripherals']['enable_keyboard']:
-            self.register_controller("keyboard")
+        if Config['pheripherals']['enabled']:
+            for controller in Config['pheripherals']['controllers']:
+                self.register_controller(controller)
         
         try:
             trhead = WThread(target=self.loop)
