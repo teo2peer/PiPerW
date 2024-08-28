@@ -35,12 +35,21 @@ class App(AppInterface):
             try:
                 
                 res = os.system("sudo apt install libsndfile1-dev")
-            
+                
                 if res != 0:
                     Log.error("Failed to install libsndfile1-dev")
                     display.text("Failed to install libsndfile1-dev")
                     pheripherals.await_any_key_press()
                     return
+                
+                # remove path if exists
+                if os.path.exists(self.path + "/PiFmRds"):
+                    res = os.system("rm -rf " + self.path + "/PiFmRds")
+                    if res != 0:
+                        Log.error("Failed to remove PiFmRds")
+                        display.text("Failed to remove PiFmRds")
+                        pheripherals.await_any_key_press()
+                        return
                 
                 res = os.system("git clone https://github.com/ChristopheJacquet/PiFmRds.git")
                 if res != 0:
