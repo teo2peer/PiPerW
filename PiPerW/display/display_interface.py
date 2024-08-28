@@ -66,7 +66,7 @@ class DisplayInterface(metaclass=Singleton):
         
         # rotate image if necessary
         if self.rotate != 0:
-            image = image.rotate(self)
+            image = image.rotate(self.rotate)
         
         self.show(image)
         
