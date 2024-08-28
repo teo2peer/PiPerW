@@ -1,8 +1,8 @@
 import keyboard
-from PiPerW.pheripherals.pheripheral_interface import Pheripheral, PheripheralAction
+from PiPerW.pheripherals.pheripheral_interface import PheripheralInterface, PheripheralAction
 import sys
 
-class Keyboard(Pheripheral):
+class Pheripheral(PheripheralInterface):
     
     def __init__(self):
         super().__init__("Keyboard")
@@ -26,4 +26,3 @@ class Keyboard(Pheripheral):
             self.log_key(PheripheralAction.EXIT)
         
             
-pheripheral = Keyboard()
