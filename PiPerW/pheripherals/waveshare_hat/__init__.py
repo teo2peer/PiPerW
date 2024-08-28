@@ -68,4 +68,3 @@ class Pheripheral(PheripheralInterface):
         
         
             
-pheripheral = Keyboard()
