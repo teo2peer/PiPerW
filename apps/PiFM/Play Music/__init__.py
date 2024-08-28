@@ -33,8 +33,8 @@ class App(AppInterface):
             
             # try to install PiFmRds
             try:
-                
-                res = os.system("sudo apt install libsndfile1-dev")
+                Log.warning("Installing libsndfile1-dev")
+                res = os.system("sudo apt install libsndfile1-dev -y")
                 
                 if res != 0:
                     Log.error("Failed to install libsndfile1-dev")
@@ -42,6 +42,8 @@ class App(AppInterface):
                     pheripherals.await_any_key_press()
                     return
                 
+                
+                Log.warning("Downloading PiFmRds")
                 # remove path if exists
                 if os.path.exists(self.path + "/PiFmRds"):
                     res = os.system("rm -rf " + self.path + "/PiFmRds")
@@ -61,7 +63,7 @@ class App(AppInterface):
                 # cd PiFmRds/src
                 # make clean
                 # make
-                
+                Log.warning("Compiling PiFmRds")
                 res = os.system("cd PiFmRds/src && make clean && make")
                 
                 if res != 0:
@@ -70,11 +72,11 @@ class App(AppInterface):
                     pheripherals.await_any_key_press()
                     return
                 
-                
+                Log.info("PiFmRds installed")
             except Exception as e:
                 raise SystemError("Failed to install PiFmRds: " + str(e))
                 return
-
+    
         self.executable = self.path + "/PiFmRds/src/pi_fm_rds"
         self.frequency = 100.0
         
