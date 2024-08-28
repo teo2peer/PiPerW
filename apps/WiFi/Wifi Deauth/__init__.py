@@ -1,11 +1,3 @@
-# sudo airmon-ng start wlan0
-# iwconfig check if monitor mode is enabled
-
-# get all bssid
-# sudo airodump-ng wlan0mon --output-format csv -w /tmp/scan
-
-# disconnect all clients
-# sudo aireplay-ng --deauth 0 -a BSSID wlan0mon
 
 from PiPerW.apps.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
