@@ -33,7 +33,7 @@ class Pheripherals(metaclass=Singleton):
     
     def register_controller(self, controller):
         Log.warning("Registering controller: {}".format(controller))
-        module = importlib.import_module("PiPerW.pheripherals.{}".format(controller)).pheripheral
+        module = importlib.import_module("PiPerW.pheripherals.{}".format(controller)).Pheripheral()
         
         self.controllers.append(module)
         
