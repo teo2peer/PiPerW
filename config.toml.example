@@ -21,10 +21,7 @@ interface = false
 ask_interface = true
 
 [pheripherals]
-enable_keyboard = true
-enable_pins = false
-enable_web = false
-
+controllers = ["keyboard"]
 
 [plugins]
 enabled = true
