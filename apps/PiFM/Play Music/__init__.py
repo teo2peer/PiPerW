@@ -29,6 +29,8 @@ class App(AppInterface):
             Log.error("PiFmRds is not installed. Installing...")
             display.text("PiFmRds is not installed. Installing...")
             
+            os.system("sudo apt install libsndfile1-dev")
+            
             # try to install PiFmRds
             try:
                 res = os.system("git clone https://github.com/ChristopheJacquet/PiFmRds.git")
