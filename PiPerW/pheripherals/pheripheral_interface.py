@@ -10,7 +10,7 @@ class PheripheralAction(Enum):
     BACK = 'back'
     EXIT = 'exit'
 
-class Pheripheral:
+class PheripheralInterface:
     
     def __init__(self, name):
         self.name = name
