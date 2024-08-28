@@ -19,7 +19,7 @@ class DisplayInterface(metaclass=Singleton):
         self.type = type
         
         # invert image x degr
-        self.rotate = Config['display']['invert']
+        self.rotate = Config['display']['rotate']
         
         # load default font
         self.font = ImageFont.load_default()
