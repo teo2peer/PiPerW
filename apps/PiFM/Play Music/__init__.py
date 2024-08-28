@@ -29,10 +29,19 @@ class App(AppInterface):
             Log.error("PiFmRds is not installed. Installing...")
             display.text("PiFmRds is not installed. Installing...")
             
-            os.system("sudo apt install libsndfile1-dev")
+            
             
             # try to install PiFmRds
             try:
+                
+                res = os.system("sudo apt install libsndfile1-dev")
+            
+                if res != 0:
+                    Log.error("Failed to install libsndfile1-dev")
+                    display.text("Failed to install libsndfile1-dev")
+                    pheripherals.await_any_key_press()
+                    return
+                
                 res = os.system("git clone https://github.com/ChristopheJacquet/PiFmRds.git")
                 if res != 0:
                     Log.error("Failed to install PiFmRds")
