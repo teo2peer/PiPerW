@@ -35,7 +35,7 @@ class Driver(DisplayInterface):
         
         self.width = 128
         self.height = 64
-        self.item_height = 16
+        self.item_height = 32
         self.horizontal_margin = 10
         self.vertical_margin = 10
         
