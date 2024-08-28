@@ -18,6 +18,9 @@ class DisplayInterface(metaclass=Singleton):
         self.vertical_margin = vertical_margin
         self.type = type
         
+        # invert image x degr
+        self.rotate = Config['display']['invert']
+        
         # load default font
         self.font = ImageFont.load_default()
         
@@ -60,6 +63,10 @@ class DisplayInterface(metaclass=Singleton):
         if not os.path.exists("PiPerW/tmp"):
             os.makedirs("PiPerW/tmp")
         image.save("PiPerW/tmp/display.png")
+        
+        # rotate image if necessary
+        if self.rotate != 0:
+            image = image.rotate(self)
         
         self.show(image)
         
