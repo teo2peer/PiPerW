@@ -128,13 +128,13 @@ class WThread(threading.Thread):
 #     Helper with PiPerW/lib
 #---------------------------
 
-def download_lib_from_github(url):
+def download_lib_from_github(url, lib_name):
     '''
     Download the PiPerW library from github
     '''
     # check if the resources folder exists
-    Log.warning("Downloading library {} from github".format(url))
-    res = os.system('git clone '+url+' PiPerW/lib')
+    Log.warning("Downloading library {} from github into {}".format(url, lib_name))
+    res = os.system('git clone {} PiPerW/lib/{}'.format(url, lib_name))
     
     if res != 0:
         Log.error("Error downloading the library")

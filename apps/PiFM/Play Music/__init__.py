@@ -53,7 +53,7 @@ class App(AppInterface):
                         pheripherals.await_any_key_press()
                         raise SystemError("Failed to remove PiFmRds")
                 
-                download_lib_from_github("https://github.com/ChristopheJacquet/PiFmRds.git")
+                download_lib_from_github("https://github.com/ChristopheJacquet/PiFmRds.git", "PiFmRds")
             
                 # compile PiFmRds
                 Log.warning("Compiling PiFmRds")
