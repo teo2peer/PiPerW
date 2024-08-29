@@ -9,7 +9,7 @@ import os
 display = Display()
 class Menu:
     
-    def __init__(self, texts, icons=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, texts, icons=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -25,10 +25,10 @@ class Menu:
         
         self.width = display.width
         self.height = display.height
+        self.item_height = display.item_height
         self.font = font
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
-        self.item_height = item_height
         self.padding = item_padding
         
         self.selected_item_padding = 6
@@ -232,7 +232,7 @@ class Menu:
         
 class MenuFolder(Menu):
     
-    def __init__(self, parent_folder, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, parent_folder, show_icons = False, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -254,22 +254,25 @@ class MenuFolder(Menu):
                 continue
             
             # check if icon exists
-            if not os.path.exists(f"{parent_folder}/{folder}/icon.bmp"):
-                Log.warning(f"Icon not found for folder {folder}")
-                icon = Image.open("PiPerW/display/no.bmp")
+            if show_icons:
+                if not os.path.exists(f"{parent_folder}/{folder}/icon.bmp"):
+                    Log.warning(f"Icon not found for folder {folder}")
+                    icon = Image.open("PiPerW/display/no.bmp")
+                else:
+                    icon = Image.open(f"{parent_folder}/{folder}/icon.bmp")
+                icons.append(icon)
             else:
-                icon = Image.open(f"{parent_folder}/{folder}/icon.bmp")
-            icons.append(icon)
+                icons = None
             
         
         
-        super().__init__(folders, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
+        super().__init__(folders, icons, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
 
         
     
 class MenuFolderFiles(Menu):
     
-    def __init__(self, folder, show_icons, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, folder, show_icons = False, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10,  item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -291,6 +294,6 @@ class MenuFolderFiles(Menu):
             icons = None
         
         
-        super().__init__(files, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
+        super().__init__(files, icons, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
     
     
