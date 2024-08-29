@@ -22,10 +22,11 @@ class App(AppInterface):
         super().__init__(self.name, self.version)
         
         # get this path
-        self.path = "PiPerW/lib/PiFmRds"
+        self.path = os.path.dirname(os.path.realpath(__file__)) 
+        self.lib_path = "PiPerW/lib/PiFmRds"
         # check if PiFmRds is installed 
         
-        if not os.path.exists(self.path + "/PiFmRds") or not os.path.exists(self.path + "/PiFmRds/src/pi_fm_rds"):
+        if not os.path.exists(self.lib_path + "/PiFmRds") or not os.path.exists(self.lib_path + "/PiFmRds/src/pi_fm_rds"):
             Log.error("PiFmRds is not installed. Installing...")
             display.text("PiFmRds is not installed. Installing...")
             
@@ -45,8 +46,8 @@ class App(AppInterface):
                 
                 Log.warning("Downloading PiFmRds")
                 # remove path if exists
-                if os.path.exists(self.path):
-                    res = os.system("rm -rf "+self.path)
+                if os.path.exists(self.lib_path):
+                    res = os.system("rm -rf "+self.lib_path)
                     if res != 0:
                         Log.error("Failed to remove PiFmRds")
                         display.text("Failed to remove PiFmRds")
@@ -71,7 +72,7 @@ class App(AppInterface):
                 raise SystemError("Failed to install PiFmRds: " + str(e))
                 return
     
-        self.executable = self.path + "src/pi_fm_rds"
+        self.executable = self.lib_path + "src/pi_fm_rds"
         self.frequency = 100.0
         
     
@@ -83,7 +84,7 @@ class App(AppInterface):
         Log.warning("Fixing makefile for Pi Zero W")
         
         # patch makefile
-        makefile = self.path + "/src/Makefile"
+        makefile = self.lib_path + "/src/Makefile"
         # replace makefile with this one
         text = '''
 CC = gcc
