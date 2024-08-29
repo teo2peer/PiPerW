@@ -133,6 +133,7 @@ def download_lib_from_github(url):
     Download the PiPerW library from github
     '''
     # check if the resources folder exists
+    Log.warning("Downloading library {} from github".format(url))
     res = os.system('git clone '+url+' PiPerW/lib')
     
     if res != 0:
