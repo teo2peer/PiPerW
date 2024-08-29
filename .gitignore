@@ -9,3 +9,6 @@ output.log
 test.py
 config.toml
 PiPerW/tmp/display.png
+
+lib/*
+!lib/README.md

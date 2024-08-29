@@ -1,0 +1,1 @@
+This folder will contain libs downloaded by scripts, for example PiFmRds from PiFm/Plau Music
