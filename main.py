@@ -111,11 +111,11 @@ def init():
 
     Log.info("PiPerW initialized")
     menu = MenuFolder("apps", True)
-    Display.draw(menu.generate())
+    menu.show()
 
     while True:
         if check_last_activity(pheripherals):
-            Display.draw(menu.generate())
+            menu.show()
         
         key = pheripherals.get_key()
         handle_key_press(key, menu, pheripherals)
@@ -166,7 +166,7 @@ def handle_menu_navigation(key, menu, pheripherals):
         menu.next()
     elif key == "select":
         app_finder(menu.get_selected(), pheripherals)
-    Display.draw(menu.generate())
+    menu.show()
 
 def app_finder(folder, pheripherals):
     '''
@@ -177,14 +177,14 @@ def app_finder(folder, pheripherals):
     '''
 
     apps_menu = MenuFolder(f"apps/{folder}", True)
-    Display.draw(apps_menu.generate())
+    apps_menu.show()
     while True:
         key = pheripherals.get_key()
         if key in ("up", "down"):
             handle_menu_navigation(key, apps_menu, pheripherals)
         elif key == "select":
             execute_app(apps_menu.get_selected(), folder, pheripherals)
-            Display.draw(apps_menu.generate())
+            apps_menu.show()
         elif key == "back" or key == "exit":
             break
 

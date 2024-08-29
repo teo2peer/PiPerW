@@ -151,9 +151,10 @@ clean:
         display.text("Select a music file to play, press any key to continue")
         
         menu = MenuFolderFiles(self.path+"/music")
-        menu.show()
         
         while True:
+            
+            menu.show()
             key = pheripherals.get_key()
             if key == "up":
                 menu.previous()

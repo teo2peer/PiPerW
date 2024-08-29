@@ -193,7 +193,14 @@ class Menu:
                 y += self.item_height + self.padding
         return img
         
+    
+    def show(self):
+        '''
+        Show the menu
+        '''
         
+        display.draw(self.generate())
+    
     def next(self):
         '''
         Move the selection to the next item
