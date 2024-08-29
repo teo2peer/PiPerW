@@ -92,6 +92,8 @@ class App(AppInterface):
             for line in lines:
                 if "ARCH_CFLAGS = -O3" in line:
                     line = "	ARCH_CFLAGS = -march=armv7-a -O3 -mtune=arm1176jzf-s -mfloat-abi=hard -mfpu=vfp -ffast-math\n"
+                if "TARGET = other" in line:
+                    line = "	TARGET = rpi\n
                 f.write(line)
             
         
