@@ -12,3 +12,6 @@ PiPerW/tmp/display.png
 
 lib/*
 !lib/README.md
+
+apps\PiFM\Play Music\music/*
+!apps\PiFM\Play Music\music/README.md
