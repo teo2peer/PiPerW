@@ -4,7 +4,7 @@ debug = true
 first_run = true
 
 [display]
-rotate = true
+rotate = 0
 driver = "only_web"
 timeout = 10
 

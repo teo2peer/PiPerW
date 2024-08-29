@@ -39,9 +39,9 @@ def install():
     # if want display inverted
     inverted = input("\nInvert display? (y/N): ")
     if inverted.lower() == "y":
-        Config['display']['invert'] = 180
+        Config['display']['rotate'] = 180
     else:
-        Config['display']['invert'] = 0
+        Config['display']['rotate'] = 0
     
     Config['display']['driver'] = selected
     
