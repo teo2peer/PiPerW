@@ -124,6 +124,22 @@ class WThread(threading.Thread):
     def stopped(self):
         return self._stop_event.is_set()
 
+#---------------------------
+#     Helper with PiPerW/lib
+#---------------------------
+
+def download_lib_from_github(url):
+    '''
+    Download the PiPerW library from github
+    '''
+    # check if the resources folder exists
+    res = os.system('git clone '+url+' PiPerW/lib')
+    
+    if res != 0:
+        Log.error("Error downloading the library")
+        raise Exception("Error downloading the library")
+
+
 
 
 #---------------------------

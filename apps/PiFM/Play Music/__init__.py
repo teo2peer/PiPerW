@@ -1,7 +1,7 @@
 from PiPerW.apps.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
-from PiPerW.helpers import Log, Config
+from PiPerW.helpers import Log, Config, download_lib_from_github
 from PiPerW.utils.Menu import MenuFolderFiles
 import os, time, subprocess, multiprocessing
 
@@ -22,7 +22,7 @@ class App(AppInterface):
         super().__init__(self.name, self.version)
         
         # get this path
-        self.path = os.path.dirname(os.path.realpath(__file__))
+        self.path = "PiPerW/lib/PiFmRds"
         # check if PiFmRds is installed 
         
         if not os.path.exists(self.path + "/PiFmRds") or not os.path.exists(self.path + "/PiFmRds/src/pi_fm_rds"):
@@ -45,26 +45,19 @@ class App(AppInterface):
                 
                 Log.warning("Downloading PiFmRds")
                 # remove path if exists
-                if os.path.exists(self.path + "/PiFmRds"):
-                    res = os.system("rm -rf " + self.path + "/PiFmRds")
+                if os.path.exists(self.path):
+                    res = os.system("rm -rf "+self.path)
                     if res != 0:
                         Log.error("Failed to remove PiFmRds")
                         display.text("Failed to remove PiFmRds")
                         pheripherals.await_any_key_press()
                         raise SystemError("Failed to remove PiFmRds")
                 
-                res = os.system("git clone https://github.com/ChristopheJacquet/PiFmRds.git")
-                if res != 0:
-                    Log.error("Failed to install PiFmRds")
-                    display.text("Failed to install PiFmRds, download it manually")
-                    pheripherals.await_any_key_press()
-                    raise SystemError("Failed to install PiFmRds")
+                download_lib_from_github("https://github.com/ChristopheJacquet/PiFmRds.git")
             
-                # cd PiFmRds/src
-                # make clean
-                # make
+                # compile PiFmRds
                 Log.warning("Compiling PiFmRds")
-                res = os.system("cd PiFmRds/src && make clean && make")
+                res = os.system("cd PiPerW/lib/PiFmRds/src && make clean && make")
                 
                 if res != 0:
                     Log.error("Failed to compile PiFmRds")
@@ -77,7 +70,7 @@ class App(AppInterface):
                 raise SystemError("Failed to install PiFmRds: " + str(e))
                 return
     
-        self.executable = self.path + "/PiFmRds/src/pi_fm_rds"
+        self.executable = self.path + "src/pi_fm_rds"
         self.frequency = 100.0
         
         
