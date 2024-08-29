@@ -16,6 +16,10 @@ last_activity = 0
 Display = Display()
 
 def first_run():
+    '''
+    First run setup
+    '''
+    
     Log.warning("First run detected")
     try:
         setup = importlib.import_module("PiPerW.setup")
@@ -37,7 +41,12 @@ def first_run():
         Log.exception(f"Error running setup script: {e}")
         sys.exit(1)
 
+
 def initialize_display():
+    '''
+    Initialize the display
+    '''
+    
     try:
         Display.init()
     except Exception as e:
@@ -46,6 +55,9 @@ def initialize_display():
     return Display
 
 def initialize_web_server():
+    '''
+    Initialize the web server to cast the display
+    '''
     if Config['display_cast']['default']:
         Log.warning("Initializing web server")
         try:
@@ -56,6 +68,9 @@ def initialize_web_server():
             sys.exit(1)
 
 def initialize_peripherals():
+    ''' 
+    Initialize the peripherals like keyboard, wave share hat, etc
+    '''
     Log.warning("Initializing peripherals")
     try:
         pheripherals = importlib.import_module("PiPerW.pheripherals").Pheripherals()
@@ -65,6 +80,10 @@ def initialize_peripherals():
     return pheripherals
 
 def init():
+    '''
+    Initialize the PiPerW
+    '''
+    
     Log.info("Initializing PiPerW")
     
     # cehck if is windows
@@ -91,7 +110,7 @@ def init():
     Display.progress_bar(60, "PiPerW")
 
     Log.info("PiPerW initialized")
-    menu = MenuFolder(Display.width, Display.height, "apps", item_height=Display.item_height)
+    menu = MenuFolder("apps", item_height=Display.item_height)
     Display.draw(menu.generate())
 
     while True:
@@ -104,6 +123,11 @@ def init():
             break
 
 def check_last_activity(pheripherals):
+    '''
+    Check if the last activity was more than the timeout
+    and display the splashscreen
+    '''
+    
     global last_activity
     if time.time() - pheripherals.timestamp > Config['display']['timeout']:
         Log.warning("Screen timeout")
@@ -116,12 +140,26 @@ def check_last_activity(pheripherals):
     return False
 
 def handle_key_press(key, menu, pheripherals):
+    '''
+    Handle the key press
+    
+    :param key: str: The key pressed
+    :param menu: Menu: The menu object
+    :param pheripherals: Pheripherals: The pheripherals object
+    '''
     if key in ("up", "down", "select"):
         handle_menu_navigation(key, menu, pheripherals)
     elif key == "back":
         return
 
 def handle_menu_navigation(key, menu, pheripherals):
+    '''
+    Handle the menu navigation
+    
+    :param key: str: The key pressed
+    :param menu: Menu: The menu object
+    :param pheripherals: Pheripherals: The pheripherals object
+    '''
     if key == "up":
         menu.previous()
     elif key == "down":
@@ -131,7 +169,14 @@ def handle_menu_navigation(key, menu, pheripherals):
     Display.draw(menu.generate())
 
 def app_finder(folder, pheripherals):
-    apps_menu = MenuFolder(Display.width, Display.height, f"apps/{folder}", item_height=Display.item_height)
+    '''
+    Find the app in the folder
+    
+    :param folder: str: The folder to search
+    :param pheripherals: Pheripherals: The pheripherals object
+    '''
+
+    apps_menu = MenuFolder(f"apps/{folder}", item_height=Display.item_height)
     Display.draw(apps_menu.generate())
     while True:
         key = pheripherals.get_key()
@@ -144,6 +189,13 @@ def app_finder(folder, pheripherals):
             break
 
 def execute_app(app, folder, pheripherals):
+    '''
+    Execute the app in a new thread
+    
+    :param app: str: The app to execute
+    :param folder: str: The folder of the app
+    :param pheripherals: Pheripherals: The pheripherals object
+    '''
     try:
         app_module = importlib.import_module("apps.{}.{}".format(folder,app)).App()
 

@@ -1,12 +1,15 @@
 from PIL import Image, ImageDraw, ImageFont
 from PiPerW.helpers import DirFilter 
 from PiPerW.helpers import Log
+from PiPerW.display import Display
 import os
 
+# FIXME: This is a workaround for avoiding passiing the width and height to the Menu class. Need to find a better solution instead of importing Display
 
+display = Display()
 class Menu:
     
-    def __init__(self, width, height, texts, icons=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, texts, icons=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -20,8 +23,8 @@ class Menu:
         
         Log.warning("Initializing menu")
         
-        self.width = width
-        self.height = height
+        self.width = display.width
+        self.height = display.height
         self.font = font
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
@@ -229,7 +232,7 @@ class Menu:
         
 class MenuFolder(Menu):
     
-    def __init__(self, width, height, parent_folder, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, parent_folder, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -260,13 +263,13 @@ class MenuFolder(Menu):
             
         
         
-        super().__init__(width, height, folders, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
+        super().__init__(, folders, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
 
         
     
 class MenuFolderFiles(Menu):
     
-    def __init__(self, width, height, folder, show_icons, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, folder, show_icons, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -288,6 +291,6 @@ class MenuFolderFiles(Menu):
             icons = None
         
         
-        super().__init__(width, height, files, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
+        super().__init__(files, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
     
     

@@ -78,7 +78,7 @@ class App(AppInterface):
         for i in self.ap:
             bssid.append(i['BSSID'])
         
-        selector = Menu(display.width, display.height, bssid)
+        selector = Menu(bssid)
         
         display.draw(selector.generate())
         while True:
