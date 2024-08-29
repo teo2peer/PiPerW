@@ -16,10 +16,12 @@ class DisplayInterface(metaclass=Singleton):
         self.item_height = item_height
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
+
         self.type = type
         
         # invert image x degr
         self.rotate = Config['display']['rotate']
+        self.save_image =Config['display_cast']['default']
         
         # load default font
         self.font = ImageFont.load_default()
@@ -57,12 +59,12 @@ class DisplayInterface(metaclass=Singleton):
         if(self.type == "RGB"):
             image = self.convert_to_rgb(image)
             
-        
-        # replace or create image in PiPerW/tmp
-        # create tmp folder if not exists
-        if not os.path.exists("PiPerW/tmp"):
-            os.makedirs("PiPerW/tmp")
-        image.save("PiPerW/tmp/display.png")
+        if self.save_image:
+            # create tmp folder if not exists
+            if not os.path.exists("PiPerW/tmp"):
+            # replace or create image in PiPerW/tmp
+                os.makedirs("PiPerW/tmp")
+            image.save("PiPerW/tmp/display.png")
         
         # rotate image if necessary
         if self.rotate != 0:
