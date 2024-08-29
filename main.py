@@ -110,7 +110,7 @@ def init():
     Display.progress_bar(60, "PiPerW")
 
     Log.info("PiPerW initialized")
-    menu = MenuFolder("apps", item_height=Display.item_height)
+    menu = MenuFolder("apps")
     Display.draw(menu.generate())
 
     while True:
