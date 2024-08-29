@@ -2,7 +2,7 @@ from PiPerW.apps.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 from PiPerW.helpers import Log, Config
-from PiPerW.utils.Menu import Menu
+from PiPerW.utils.Menu import MenuFolderFiles
 import os, time, subprocess, multiprocessing
 
 
@@ -40,7 +40,7 @@ class App(AppInterface):
                     Log.error("Failed to install libsndfile1-dev")
                     display.text("Failed to install libsndfile1-dev")
                     pheripherals.await_any_key_press()
-                    return
+                    raise SystemError("Failed to install libsndfile1-dev")
                 
                 
                 Log.warning("Downloading PiFmRds")
@@ -51,14 +51,14 @@ class App(AppInterface):
                         Log.error("Failed to remove PiFmRds")
                         display.text("Failed to remove PiFmRds")
                         pheripherals.await_any_key_press()
-                        return
+                        raise SystemError("Failed to remove PiFmRds")
                 
                 res = os.system("git clone https://github.com/ChristopheJacquet/PiFmRds.git")
                 if res != 0:
                     Log.error("Failed to install PiFmRds")
                     display.text("Failed to install PiFmRds, download it manually")
                     pheripherals.await_any_key_press()
-                    return
+                    raise SystemError("Failed to install PiFmRds")
             
                 # cd PiFmRds/src
                 # make clean
@@ -70,7 +70,7 @@ class App(AppInterface):
                     Log.error("Failed to compile PiFmRds")
                     display.text("Failed to compile PiFmRds")
                     pheripherals.await_any_key_press()
-                    return
+                    raise SystemError("Failed to compile PiFmRds")
                 
                 Log.info("PiFmRds installed")
             except Exception as e:
