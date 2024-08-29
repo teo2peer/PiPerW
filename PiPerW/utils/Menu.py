@@ -263,7 +263,7 @@ class MenuFolder(Menu):
             
         
         
-        super().__init__(, folders, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
+        super().__init__(folders, icons, font, horizontal_margin, vertical_margin, item_height, item_padding, background_color, accent_color)
 
         
     
