@@ -264,7 +264,7 @@ class MenuFolder(Menu):
 
         
     
-class MenuFolderFile(Menu):
+class MenuFolderFiles(Menu):
     
     def __init__(self, width, height, folder, show_icons, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_height=16, item_padding = 10, background_color=0, accent_color=255):
         '''
