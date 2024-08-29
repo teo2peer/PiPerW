@@ -54,7 +54,8 @@ class App(AppInterface):
                         raise SystemError("Failed to remove PiFmRds")
                 
                 download_lib_from_github("https://github.com/ChristopheJacquet/PiFmRds.git", "PiFmRds")
-            
+                self.fix_makefile_pi_zerow()
+                
                 # compile PiFmRds
                 Log.warning("Compiling PiFmRds")
                 res = os.system("cd PiPerW/lib/PiFmRds/src && make clean && make")
@@ -73,6 +74,26 @@ class App(AppInterface):
         self.executable = self.path + "src/pi_fm_rds"
         self.frequency = 100.0
         
+    
+    def fix_makefile_pi_zerow(self):
+        '''
+            Fix makefile for Pi Zero W
+        '''
+    
+        # patch makefile
+        makefile = self.path + "/src/Makefile"
+        # replace ARCH_CFLAGS = -O3 to ARCH_CFLAGS = -march=armv7-a -O3 -mtune=arm1176jzf-s -mfloat-abi=hard -mfpu=vfp -ffast-math
+        # use regex to replace
+        
+        with open(makefile, "r") as f:
+            lines = f.readlines()
+            
+        with open(makefile, "w") as f:
+            for line in lines:
+                if "ARCH_CFLAGS" in line:
+                    line = "ARCH_CFLAGS = -march=armv7-a -O3 -mtune=arm1176jzf-s -mfloat-abi=hard -mfpu=vfp -ffast-math\n"
+                f.write(line)
+            
         
     def run(self):
         
