@@ -55,7 +55,7 @@ class Menu:
             self.filter(pattern)
         
         Log.info("Creating menu items")
-        for i in range(len(texts)):
+        for i in range(len(self.texts)):
             Log.info(f"Creating item {i}")
             self.items.append(self.create_item(self.texts[i], self.icons[i] if self.icons else None))
         
