@@ -24,12 +24,17 @@ class Pheripherals(metaclass=Singleton):
             register_controller('keyboard')
             
         try:
-            trhead = WThread(target=self.loop)
-            trhead.start()
-            time.sleep(1)
+            self.trhead = WThread(target=self.loop)
+            self.trhead.start()
+            self.time.sleep(1)
         except Exception as e:
             Log.exception("Error initializing pheripherals: {}".format(e))
             sys.exit(1)
+    
+    def stop(self):
+        Log.warning("Stopping pheripherals")
+        self.trhead.stop()
+        
     
     def register_controller(self, controller):
         Log.warning("Registering controller: {}".format(controller))

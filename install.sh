@@ -63,8 +63,9 @@ echo "Restarting lightdm service..."
 sudo service lightdm restart
 
 # Set the default systemd target to multi-user
-echo "Setting the default systemd target to multi-user..."
-sudo systemctl set-default multi-user.target
+echo "Setting the default systemd target to 3..."
+sudo systemctl set-default runlevel3.target
+
 
 # Enable SPI, I2C, and Serial through raspi-config
 echo "Enabling SPI, I2C, and Serial interfaces using raspi-config..."

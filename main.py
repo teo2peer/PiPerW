@@ -214,13 +214,26 @@ def execute_app(app, folder, pheripherals):
         on_exit.__init__()
     except ImportError:
         pass
-        
+
+def stop_app():
+    '''
+    Stop the app
+    '''
+    Display.stop_animation()
+    Display.text("Stopping PiPerW")
+    pheripherals.stop()
+    
+    Display.clear()
+    
 
 if __name__ == "__main__":
     try:
         init()
     except KeyboardInterrupt:
         Log.info("Exiting PiPerW")
+        
+        stop_app()
+        
         sys.exit(0)
     except Exception as e:
         Log.exception(f"Error initializing PiPerW: {e}")
