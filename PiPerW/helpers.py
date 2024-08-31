@@ -123,6 +123,12 @@ class WThread(threading.Thread):
 
     def stopped(self):
         return self._stop_event.is_set()
+    
+        '''
+        Add in the loop:
+        if self.thread.stopped():
+                break
+        '''
 
 #---------------------------
 #     Helper with PiPerW/lib
