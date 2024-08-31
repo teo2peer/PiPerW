@@ -14,6 +14,7 @@ import time
 
 last_activity = 0
 Display = Display()
+Pherepheral = None
 
 def first_run():
     '''
@@ -73,11 +74,10 @@ def initialize_peripherals():
     '''
     Log.warning("Initializing peripherals")
     try:
-        pheripherals = importlib.import_module("PiPerW.pheripherals").Pheripherals()
+        Pherepheral = importlib.import_module("PiPerW.pheripherals").Pheripherals()
     except Exception as e:
         Log.exception(f"Error initializing peripherals: {e}")
         sys.exit(1)
-    return pheripherals
 
 def init():
     '''
@@ -106,7 +106,7 @@ def init():
     initialize_web_server()
     Display.progress_bar(40, "Loading PiPerW", True)
 
-    pheripherals = initialize_peripherals()
+    initialize_peripherals()
     Display.progress_bar(60, "PiPerW")
 
     Log.info("PiPerW initialized")
@@ -114,87 +114,83 @@ def init():
     menu.show()
 
     while True:
-        if check_last_activity(pheripherals):
+        if check_last_activity():
             menu.show()
         
-        key = pheripherals.get_key()
-        handle_key_press(key, menu, pheripherals)
+        key = Pherepheral.get_key()
+        handle_key_press(key, menu)
         if key == "back":
             break
 
-def check_last_activity(pheripherals):
+def check_last_activity():
     '''
     Check if the last activity was more than the timeout
     and display the splashscreen
     '''
     
     global last_activity
-    if time.time() - pheripherals.timestamp > Config['display']['timeout']:
+    if time.time() - Pherepheral.timestamp > Config['display']['timeout']:
         Log.warning("Screen timeout")
         Display.splashscreen()
-        pheripherals.await_any_key_press()
+        Pherepheral.await_any_key_press()
         Log.info("Screen wakeup")
         last_activity = time.time()
         Display.stop_animation()
         return True
     return False
 
-def handle_key_press(key, menu, pheripherals):
+def handle_key_press(key, menu):
     '''
     Handle the key press
     
     :param key: str: The key pressed
     :param menu: Menu: The menu object
-    :param pheripherals: Pheripherals: The pheripherals object
     '''
     if key in ("up", "down", "select"):
-        handle_menu_navigation(key, menu, pheripherals)
+        handle_menu_navigation(key, menu)
     elif key == "back":
         return
 
-def handle_menu_navigation(key, menu, pheripherals):
+def handle_menu_navigation(key, menu):
     '''
     Handle the menu navigation
     
     :param key: str: The key pressed
     :param menu: Menu: The menu object
-    :param pheripherals: Pheripherals: The pheripherals object
     '''
     if key == "up":
         menu.previous()
     elif key == "down":
         menu.next()
     elif key == "select":
-        app_finder(menu.get_selected(), pheripherals)
+        app_finder(menu.get_selected(), Pherepheral)
     menu.show()
 
-def app_finder(folder, pheripherals):
+def app_finder(folder):
     '''
     Find the app in the folder
     
     :param folder: str: The folder to search
-    :param pheripherals: Pheripherals: The pheripherals object
     '''
 
     apps_menu = MenuFolder(f"apps/{folder}", True)
     apps_menu.show()
     while True:
-        key = pheripherals.get_key()
+        key = Pherepheral.get_key()
         if key in ("up", "down"):
-            handle_menu_navigation(key, apps_menu, pheripherals)
+            handle_menu_navigation(key, apps_menu)
         elif key == "select":
-            execute_app(apps_menu.get_selected(), folder, pheripherals)
+            execute_app(apps_menu.get_selected(), folder)
             apps_menu.show()
         elif key == "back" or key == "exit":
             break
 
-def execute_app(app, folder, pheripherals):
+def execute_app(app, folder):
     '''
     Execute the app in a new thread
     
     :param app: str: The app to execute
     :param folder: str: The folder of the app
-    :param pheripherals: Pheripherals: The pheripherals object
     '''
     try:
         app_module = importlib.import_module("apps.{}.{}".format(folder,app)).App()
@@ -205,7 +201,7 @@ def execute_app(app, folder, pheripherals):
     except Exception as e:
         Log.exception(f"App crashed\n{app}: {e}")
         Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
-        pheripherals.await_any_key_press()
+        Pherepheral.await_any_key_press()
         
     # check if exist in folder __on_exit__.py
     try:
@@ -221,7 +217,7 @@ def stop_app():
     '''
     Display.stop_animation()
     Display.text("Stopping PiPerW")
-    pheripherals.stop()
+    Pherepheral.stop()
     
     Display.clear()
     
