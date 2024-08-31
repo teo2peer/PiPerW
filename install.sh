@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# Check if the script is being run as root
+if [[ $EUID -ne 0 ]]; then
+    # try to elevate the script to root
+    echo "This script must be run as root. Trying to elevate the script to root..."
+    sudo $0
+
+    # check if the script is now running as root
+    if [[ $EUID -ne 0 ]]; then
+        echo "The script could not be elevated to root. Please run the script as root."
+        exit 1
+    fi
+
+    echo "The script has been successfully elevated to root."
+fi
+
+
 # Update the package list and install required packages
 echo "Updating package list and installing required packages..."
 sudo apt-get update
@@ -67,15 +83,15 @@ sudo raspi-config nonint do_serial 0
 
 # Create and configure a swap file
 echo "Creating and configuring a swap file..."
-sudo dd if=/dev/zero of=/name.swap.tmp bs=1024 count=2097152
-sudo mv /name.swap.tmp /name.swap
-sudo chmod 600 /name.swap
+sudo dd if=/dev/zero of=/kali.swap.tmp bs=1024 count=2097152
+sudo mv /kali.swap.tmp /kali.swap
+sudo chmod 600 /kali.swap
 
 # Setting up the swap space
 echo "Setting up the swap space..."
-sudo mkswap /name.swap
-sudo swapon /name.swap
-
+sudo mkswap /kali.swap
+sudo swapon /kali.swap
+sudo echo "/kali.swap none swap sw 0 0" >> /etc/fstab
 
 # Indicate that the script execution is complete
 echo "Script execution completed."
