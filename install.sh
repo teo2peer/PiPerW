@@ -2,17 +2,8 @@
 
 # Check if the script is being run as root
 if [[ $EUID -ne 0 ]]; then
-    # try to elevate the script to root
-    echo "This script must be run as root. Trying to elevate the script to root..."
-    sudo $0
-
-    # check if the script is now running as root
-    if [[ $EUID -ne 0 ]]; then
-        echo "The script could not be elevated to root. Please run the script as root."
-        exit 1
-    fi
-
-    echo "The script has been successfully elevated to root."
+    echo "Please run the script as root."
+    exit 1
 fi
 
 
