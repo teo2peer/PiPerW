@@ -3,13 +3,14 @@ from PiPerW.helpers import DirFilter
 from PiPerW.helpers import Log
 from PiPerW.display import Display
 import os
+import re
 
 # FIXME: This is a workaround for avoiding passiing the width and height to the Menu class. Need to find a better solution instead of importing Display
 
 display = Display()
 class Menu:
     
-    def __init__(self, texts, icons=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, texts, icons=None, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -46,10 +47,17 @@ class Menu:
         self.start_index = 0
         self.index = 0
         
+        # remove all items that start with __
+        self.texts = [text for text in self.texts if not text.startswith("__")]
+        
+        if pattern:
+            Log.info("Filtering items")
+            self.filter(pattern)
+        
         Log.info("Creating menu items")
         for i in range(len(texts)):
             Log.info(f"Creating item {i}")
-            self.items.append(self.create_item(texts[i], icons[i] if icons else None))
+            self.items.append(self.create_item(self.texts[i], self.icons[i] if self.icons else None))
         
         Log.info("Menu initialized")
         
@@ -194,6 +202,25 @@ class Menu:
         return img
         
     
+    def add_item(self, text, icon=None):
+        '''
+        Add an item to the menu
+        
+        :param text: str: Text of the item
+        :param icon: Image: Icon of the item
+        '''
+        
+        self.items.append(self.create_item(text, icon))
+        
+    def filter(self, regex):
+        '''
+        Filter the items based on regex pattern
+
+        :param text: str: Text to filter
+        '''
+        pattern = re.compile(regex)
+        self.texts = [text for text in self.texts if pattern.match(text)]
+    
     def show(self):
         '''
         Show the menu
@@ -239,7 +266,7 @@ class Menu:
         
 class MenuFolder(Menu):
     
-    def __init__(self, parent_folder, show_icons = False, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, parent_folder, show_icons = False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -273,13 +300,13 @@ class MenuFolder(Menu):
             
         
         
-        super().__init__(folders, icons, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
+        super().__init__(folders, icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
 
         
     
 class MenuFolderFiles(Menu):
     
-    def __init__(self, folder, show_icons = False, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10,  item_padding = 10, background_color=0, accent_color=255):
+    def __init__(self, folder, show_icons = False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10,  item_padding = 10, background_color=0, accent_color=255):
         '''
         Initialize the menu
         
@@ -301,6 +328,6 @@ class MenuFolderFiles(Menu):
             icons = None
         
         
-        super().__init__(files, icons, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
+        super().__init__(files, icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
     
     
