@@ -77,11 +77,12 @@ class Menu:
         # Draw the background for the item
         draw.rectangle((0, 0, self.width, self.item_height), outline=0, fill=self.background_color)
         
-        icon_offset_x = self.horizontal_margin  # Initial offset for the icon
+        icon_offset_x = 0  # Initial offset for the icon
         icon_size = self.item_height  # Assuming the icon is a square of item height
         
         # Calculate the text position based on whether there's an icon
-        text_x = icon_offset_x + (icon_size + 4 if icon else 16)
+        text_x = icon_offset_x + (icon_size + 4 if icon else 0)  # Initial offset for the text
+        print(text_x)
         
         # Calculate text height for vertical centering
         text_bbox = self.font.getbbox(text)  # Measure the text, not the draw object
@@ -126,9 +127,9 @@ class Menu:
         
         # Rounded rectangle parameters
         border_radius = 8
-        rect_x0 = padding
+        rect_x0 = 0
         rect_y0 = 0
-        rect_x1 = border_width - padding 
+        rect_x1 = self.width - self.horizontal_margin 
         rect_y1 = border_height
         
         # Draw rounded rectangle around the selected item
@@ -176,7 +177,7 @@ class Menu:
             
             
             # The last item is selected, display it fully
-            img.paste(self.selected_item(self.items[-1]), (x, last_item_y))
+            img.paste(self.selected_item(self.items[-1]), (0, last_item_y))
             # the previous item is not selected, display it partially
             img.paste(self.items[-2], (x, last_item_y - (self.item_height + self.padding)))
             
@@ -194,7 +195,7 @@ class Menu:
                 # Draw the selected item with a rounded rectangle
                 if i == self.index:
                     item = self.selected_item(item)
-                    img.paste(item, (x, y))
+                    img.paste(item, (0, y))
                 else:
                     img.paste(item, (x, y + 6))
 
