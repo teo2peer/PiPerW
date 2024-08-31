@@ -23,10 +23,12 @@ class App(AppInterface):
         
         # get this path
         self.path = os.path.dirname(os.path.realpath(__file__)) 
+        # get root program path
+        self.root_path = os.path.dirname(os.path.dirname(os.path.dirname(self.path)))
         self.lib_path = "PiPerW/lib/PiFmRds"
         # check if PiFmRds is installed 
         
-        if not os.path.exists(self.lib_path + "/PiFmRds") or not os.path.exists(self.lib_path + "/PiFmRds/src/pi_fm_rds"):
+        if not os.path.exists(self.lib_path) or not os.path.exists(self.lib_path + "/src/pi_fm_rds"):
             Log.error("PiFmRds is not installed. Installing...")
             display.text("PiFmRds is not installed. Installing...")
             
@@ -72,8 +74,11 @@ class App(AppInterface):
                 raise SystemError("Failed to install PiFmRds: " + str(e))
                 return
     
-        self.executable = self.lib_path + "src/pi_fm_rds"
+        self.executable = self.root_path +'/'+ self.lib_path + "/src/pi_fm_rds"
         self.frequency = 100.0
+        
+        print("Executable: ", self.executable)
+
         
     
     def fix_makefile_pi_zerow(self):
@@ -147,6 +152,9 @@ clean:
     def run(self):
         
         
+        display.text("Select frequency to play music")
+        self.select_frequency()
+        
         # play music
         display.text("Select a music file to play, press any key to continue")
         
@@ -155,13 +163,13 @@ clean:
         while True:
             
             menu.show()
-            key = pheripherals.get_key()
+            key = pheripherals.await_key()
             if key == "up":
                 menu.previous()
             elif key == "down":
                 menu.next()
             elif key == "select":
-                play_music(menu.get_selected())
+                self.play_music(menu.get_selected())
             elif key == "back" or key == "exit":
                 break
             
@@ -171,9 +179,7 @@ clean:
         Select frequency to play music
         '''
         
-        display.text("Select frequency to play music")
-        display.text("Press up or down to change frequency")
-        display.text("Press select to play music")
+        display.text("Move to change frequency\nPress select to confirm")
         
         while True:
             key = pheripherals.await_key()
@@ -193,7 +199,10 @@ clean:
             
             text += "Frequency: {:.1f}".format(self.frequency)
             display.text(text)
-        return self.frequency
+    
+    def run_executable(self, executable, args):
+        args = [str(arg) for arg in args]
+        subprocess.run([executable] + args)
     
     def play_music(self, file):
         '''
@@ -203,12 +212,28 @@ clean:
         '''
         
         display.text("Playing {}".format(file)+"\nPress any key to stop")
-        process = multiprocessing.Process(target=self.executable, args=(self.path+"/music/"+file,))
+        process = multiprocessing.Process(
+            target=self.run_executable,
+            args=[self.executable, ["-freq", self.frequency, "-audio", self.path+"/music/"+file]]
+        )
         process.start()
         
         pheripherals.await_any_key_press()
         
+        # get process id
+        pid = process.pid
+        
+        # terminate process
         process.terminate()
+        
+        # make sure process is terminated with kill
+        os.system("kill -9 "+str(pid))
+        
+        # wait for process to finish
+        process.join()
+        
+        
+        
         
         
         

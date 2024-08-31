@@ -46,7 +46,7 @@ class Pheripherals(metaclass=Singleton):
         self.key = None
         while not self.key:
             time.sleep(0.1)
-        return self.key
+        return self.get_key()
 
     def await_any_key_press(self):
         self.await_key()
