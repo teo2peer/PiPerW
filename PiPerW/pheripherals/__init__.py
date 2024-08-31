@@ -34,6 +34,7 @@ class Pheripherals(metaclass=Singleton):
     def stop(self):
         Log.warning("Stopping pheripherals")
         self.trhead.stop()
+        self.trhead.join()
         
     
     def register_controller(self, controller):
