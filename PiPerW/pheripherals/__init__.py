@@ -2,7 +2,7 @@ from PiPerW.helpers import Config, Log, WThread, save_config
 from PiPerW.pheripherals.pheripheral_interface import PheripheralAction
 from PiPerW.utils.Singleton import Singleton
 import importlib
-import time
+import time, sys
 
 class Pheripherals(metaclass=Singleton):
     
@@ -26,7 +26,7 @@ class Pheripherals(metaclass=Singleton):
         try:
             self.trhead = WThread(target=self.loop)
             self.trhead.start()
-            self.time.sleep(1)
+            time.sleep(1)
         except Exception as e:
             Log.exception("Error initializing pheripherals: {}".format(e))
             sys.exit(1)
