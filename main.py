@@ -164,7 +164,7 @@ def handle_menu_navigation(key, menu):
     elif key == "down":
         menu.next()
     elif key == "select":
-        app_finder(menu.get_selected(), Pherepheral)
+        app_finder(menu.get_selected())
     menu.show()
 
 def app_finder(folder):

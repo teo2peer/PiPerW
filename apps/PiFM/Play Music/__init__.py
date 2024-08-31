@@ -202,35 +202,36 @@ clean:
     
     def run_executable(self, executable, args):
         args = [str(arg) for arg in args]
-        subprocess.run([executable] + args)
-    
+        return subprocess.Popen([executable] + args)  # Use Popen to run the executable
+
+
     def play_music(self, file):
         '''
-        Play music file into another process
+        Play music file using subprocess.Popen
         
         :param file: music file path
         '''
         
         display.text("Playing {}".format(file)+"\nPress any key to stop")
-        process = multiprocessing.Process(
-            target=self.run_executable,
-            args=[self.executable, ["-freq", self.frequency, "-audio", self.path+"/music/"+file]]
-        )
-        process.start()
+        Log.info("Playing music: "+file)
+        
+        # Run the executable with Popen
+        process = self.run_executable(self.executable, ["-freq", self.frequency, "-audio", self.path + "/music/" + file])
         
         pheripherals.await_any_key_press()
         
-        # get process id
-        pid = process.pid
+        display.text("Stopping PiFmRds")
+        Log.info("Stopping radio transmission of PiFmRds")
         
-        # terminate process
-        process.terminate()
+        # Terminate the process
+        if process.poll() is None:  # Check if the process is still running
+            process.terminate()  # Terminate the process
+            time.sleep(0.5)  # Give it a moment to terminate
+
+        if process.poll() is None:  # If it's still running, kill it
+            process.kill()
         
-        # make sure process is terminated with kill
-        os.system("kill -9 "+str(pid))
-        
-        # wait for process to finish
-        process.join()
+        process.wait()  # Wait for the process to finish
         
         
         
