@@ -63,6 +63,8 @@ class Pheripherals(metaclass=Singleton):
     def loop(self):
         Log.info("Pheripherals loop started")
         while True:
+            if self.thread.stopped():
+                break
             key = None
             timestamp = 0
             diferent_key = False
