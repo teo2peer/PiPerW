@@ -72,6 +72,7 @@ def initialize_peripherals():
     ''' 
     Initialize the peripherals like keyboard, wave share hat, etc
     '''
+    global Pherepheral
     Log.warning("Initializing peripherals")
     try:
         Pherepheral = importlib.import_module("PiPerW.pheripherals").Pheripherals()
