@@ -36,6 +36,7 @@ class Pheripherals(metaclass=Singleton):
         self.trhead.stop()
         self.trhead.join()
         
+        
     
     def register_controller(self, controller):
         Log.warning("Registering controller: {}".format(controller))
