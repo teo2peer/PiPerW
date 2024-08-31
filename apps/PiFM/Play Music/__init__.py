@@ -158,7 +158,8 @@ clean:
         # play music
         display.text("Select a music file to play, press any key to continue")
         
-        menu = MenuFolderFiles(self.path+"/music")
+        # regex pattern to filter music files like mp3, wav, etc
+        menu = MenuFolderFiles(self.path+"/music", pattern=".*\.(mp3|wav|ogg|flac|aac|wma|m4a|mp4)$")
         
         while True:
             
