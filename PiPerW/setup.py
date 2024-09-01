@@ -1,7 +1,7 @@
 from PiPerW.helpers import Config, Log, DirFilter, Selector, save_config
 import os
 import psutil
-
+import bluetooth
 
 
 def install():
@@ -70,12 +70,17 @@ def install():
     if Config['bluetooth']['ask_interface'] == True:
         Log.info("Searching for bluetooth interfaces")
         
-        addrs = list(psutil.net_if_addrs().keys())
-        interfaces = []
-        Log.info("Bluetooth interfaces found: {}".format(addrs))
-        
-        selector = Selector(addrs, "Select a bluetooth interface")
-        selected = selector.select()
+        interfaces = bluetooth.discover_devices(duration=8, lookup_names=True, lookup_ids=True, lookup_oui=True, lookup_oui=True, lookup_oui=True)
+
+        if not interfaces:
+            Log.error("No bluetooth interfaces found")
+            selected = None
+        else:
+            addrs = [x[0] for x in interfaces]
+            Log.info("Bluetooth interfaces found: {}".format(addrs))
+            
+            selector = Selector(addrs, "Select a bluetooth interface")
+            selected = selector.select()
         Log.info("Selected bluetooth interface: {}".format(selected))
         
         Config['bluetooth']['interface'] = selected
