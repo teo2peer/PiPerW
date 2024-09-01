@@ -17,6 +17,7 @@ class PheripheralInterface:
         
         self.key = None
         self.timestamp = time.time()
+        self.long_press_time = 1.2
         
     def get_key(self):
         return self.key, self.timestamp
