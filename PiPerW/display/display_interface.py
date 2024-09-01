@@ -186,11 +186,12 @@ class DisplayInterface(metaclass=Singleton):
         
     def text(self, text):
         '''
-        Display text in the middle of the screen, respecting \n and centering the text.
+        Display text in the middle of the screen
         
         :param text: str: Text to display
         '''
         
+        # Create a new image with black background
         # Create a new image with black background
         img = Image.new('1', (self.width, self.height), 0)
         draw = ImageDraw.Draw(img)
@@ -219,20 +220,35 @@ class DisplayInterface(metaclass=Singleton):
             # Add the last line of the segment
             if current_line:
                 lines.append(current_line.strip())
+            
+            # Add a separator for a new segment, but not after the last one
+            if segment != segments[-1]:
+                lines.append("")  # Add an empty line as a placeholder for the 2-pixel separation
         
-        # Calculate total text height to vertically center the text block
-        total_text_height = sum(draw.textbbox((0, 0), line, font=self.font)[3] - draw.textbbox((0, 0), line, font=self.font)[1] for line in lines)
-        text_y = (self.height - total_text_height) / 2
+        # Calculate total text height including the 2-pixel separation between segments
+        total_text_height = 0
+        for line in lines:
+            if line == "":
+                total_text_height += 4  # Add 4 pixels for separation
+            else:
+                text_bbox = draw.textbbox((0, 0), line, font=self.font)
+                line_height = text_bbox[3] - text_bbox[1]
+                total_text_height += line_height
+        
+        text_y = (self.height - total_text_height) / 2  # Start Y position to vertically center the block
         
         # Draw each line of text, centered on the screen
         for line in lines:
-            text_bbox = draw.textbbox((0, 0), line, font=self.font)
-            text_width = text_bbox[2] - text_bbox[0]
-            text_height = text_bbox[3] - text_bbox[1]
-            text_x = (self.width - text_width) / 2  # Center the line horizontally
-            
-            draw.text((text_x, text_y), line, font=self.font, fill=255)
-            text_y += text_height
+            if line == "":
+                text_y += 2  # Add 2 pixels for separation between segments
+            else:
+                text_bbox = draw.textbbox((0, 0), line, font=self.font)
+                text_width = text_bbox[2] - text_bbox[0]
+                text_height = text_bbox[3] - text_bbox[1]
+                text_x = (self.width - text_width) / 2  # Center the line horizontally
+                
+                draw.text((text_x, text_y), line, font=self.font, fill=255)
+                text_y += text_height
         
         # Resize image if necessary (usually not needed if dimensions are already correct)
         img = img.resize((self.width, self.height))
