@@ -181,7 +181,7 @@ clean:
             elif key == "down":
                 self.frequency -= 1.0
             elif key == "select":
-                break
+                self.frequency = round(self.frequency, 1)
             elif key == "back":
                 return
             
