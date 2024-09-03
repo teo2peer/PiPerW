@@ -87,5 +87,27 @@ sudo mkswap /kali.swap
 sudo swapon /kali.swap
 sudo echo "/kali.swap none swap sw 0 0" >> /etc/fstab
 
+# adding otg support for bad_usb
+sudo echo dtoverlay=dwc2 | sudo tee -a /boot/config.txt
+sudo echo dwc2 | sudo tee -a /etc/modules
+sudo echo "libcomposite" | sudo tee -a /etc/modules
+
+
+echo "Creating a 4GB file for the USB drive..."
+# Create a 4gb file for the USB drive
+FILE=/PiPerW.img
+MNTPOINT=/mnt/usb_piperw
+
+dd if=/dev/zero of=$FILE bs=1M count=4096
+mkdosfs $FILE
+
+echo "Setting up the USB drive, keyboard, mouse..."
+preparing the hid_script
+sudo chmod +x ./PiPerW/lib/pheripherals/hid_script
+LOCAL_PATH=$(pwd)
+
+# Add the script to crontab
+sudo echo "@reboot root $LOCAL_PATH/PiPerW/lib/init/hid_script" | sudo tee -a /etc/crontab
+
 # Indicate that the script execution is complete
 echo "Script execution completed."
