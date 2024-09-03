@@ -10,6 +10,7 @@ import sys, time, subprocess, os, string
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+from PIL import ImageOps
 
 import RPi.GPIO as GPIO
 
@@ -73,6 +74,9 @@ class Driver(DisplayInterface):
 
     def show(self, image):
         """Show an image on the display."""
+        
+        image = image.convert("1")
+        # image = ImageOps.invert(image)
         with canvas(self.device) as draw:
             draw.bitmap((0, 0), image, fill=255)
             

@@ -8,7 +8,7 @@ import os, time
 
 
 class DisplayInterface(metaclass=Singleton):
-    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10, type="b"):
+    def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10, type_screen="b"):
         self.width = width
         self.height = height
         
@@ -17,7 +17,11 @@ class DisplayInterface(metaclass=Singleton):
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
 
-        self.type = type
+
+        if type_screen == "b" or type_screen == "1":
+            self.type = "1"
+        elif type_screen == "rgb" or type_screen == "RGB":
+            self.type = "RGB"
         
         # invert image x degr
         self.rotate = Config['display']['rotate']
@@ -46,6 +50,30 @@ class DisplayInterface(metaclass=Singleton):
         pass
     
     
+    def new_image(self):
+        '''
+        Create a new image
+        '''
+        return Image.new(self.type, (self.width, self.height), 0)
+    
+    def new_image_from_file(self, file):
+        '''
+        Create a new image from a file
+        
+        :param file: str: Path to the file
+        '''
+        image = self.new_image()
+        paste_image = Image.open(file)
+        
+        # convert
+        paste_image = paste_image.convert(self.type)
+        
+        # resize image to fit the screen
+        paste_image.thumbnail((self.width, self.height))
+        image.paste(paste_image, (0, 0))
+
+        return image
+
     # DO NOT MODIFY
     def draw(self, image):
         print("Drawing image")
@@ -140,7 +168,7 @@ class DisplayInterface(metaclass=Singleton):
             self.thread.join()
             self.thread = None
     
-    def progress_bar(self, progress, message="", text_on_top = False, color=255):
+    def progress_bar(self, progress, message="", text_on_top = False, color=0):
         ''' 
         Display a progress bar in the middle of the screen
         
@@ -156,12 +184,12 @@ class DisplayInterface(metaclass=Singleton):
         draw = ImageDraw.Draw(img)
 
         # Draw the background for the progress bar
-        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
-        draw.rectangle((10, self.height / 2 - (2 + height_Bar / 2), self.width - 10, self.height / 2 + 12), outline=0, fill=255)
+        draw.rectangle((0, 0, self.width, self.height), outline=0, fill=255)
+        draw.rectangle((10, self.height / 2 - (2 + height_Bar / 2), self.width - 10, self.height / 2 + 12), outline=0, fill=0)
         
         # Calculate the filled width of the progress bar
         filled_width = ((self.width-24) * progress / 100)+12
-        draw.rectangle((12, self.height / 2 - (height_Bar / 2), filled_width, self.height / 2 + 10), outline=0, fill=0)
+        draw.rectangle((12, self.height / 2 - (height_Bar / 2), filled_width, self.height / 2 + 10), outline=0, fill=255)
         
         # Calculate text size and position
         text_bbox = draw.textbbox((0, 0), message, font=self.font)
