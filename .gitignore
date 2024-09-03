@@ -13,9 +13,9 @@ test.py
 PiPerW/tmp/*
 
 # Ignore lib except some files
-lib/
+PiPerW/lib/*
 !PiPerW/lib/init/hid_script
-!lib/README.md
+!PiPerW/lib/README.md
 
 # Ignore music except some files
 apps/PiFM/Play Music/music/
