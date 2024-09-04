@@ -1,5 +1,5 @@
 from PiPerW.helpers import Config, Log, WThread, save_config
-from PiPerW.pheripherals.pheripheral_interface import PheripheralAction
+from PiPerW.interfaces.pheripheral_interface import PheripheralAction
 from PiPerW.utils.Singleton import Singleton
 import importlib
 import time, sys

@@ -1,9 +1,10 @@
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github
 from PiPerW.utils.Menu import MenuFolderFiles
-import os, time, subprocess, multiprocessing
+import os, sys, time
+import subprocess
 
 
 display = Display()
@@ -194,10 +195,11 @@ clean:
             elif key == "down":
                 self.frequency -= 1.0
             elif key == "select":
-                self.frequency = round(self.frequency, 1)
+                break
             elif key == "back":
-                return
+                sys.exit(0)
             
+            self.frequency = round(self.frequency, 1)
             text += "Frequency: {:.1f}".format(self.frequency)
             display.text(text)
     

@@ -1,9 +1,10 @@
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github
 from PiPerW.utils.Menu import MenuFolderFiles
-import os, time, subprocess, multiprocessing
+import os, time, sys
+import subprocess
 
 
 display = Display()
@@ -14,9 +15,9 @@ pheripherals = Pheripherals()
 class App(AppInterface):
     
     def __init__(self):
-        self.name = "Play Music"
+        self.name = "Interference"
         self.version = "1.0"
-        self.description = "Play music from your Pi"
+        self.description = "Make interefrence in a channe"
         self.author = "Teo2Peer"
         
         super().__init__(self.name, self.version)
@@ -154,7 +155,7 @@ clean:
         
         display.text("Select frequency to play music")
         self.select_frequency()
-               
+
         # regex pattern to filter music files like mp3, wav, etc
         file = self.path+"/noise.mp3"
         
@@ -182,8 +183,9 @@ clean:
                 self.frequency -= 1.0
             elif key == "select":
                 self.frequency = round(self.frequency, 1)
+                break
             elif key == "back":
-                return
+                sys.exit()
             
             text += "Frequency: {:.1f}".format(self.frequency)
             display.text(text)

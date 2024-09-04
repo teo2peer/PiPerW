@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from PiPerW.display.display_interface import DisplayInterface
+from PiPerW.interfaces.display_interface import DisplayInterface
 from luma.core.interface.serial import i2c, spi
 from luma.core.render import canvas
 from luma.core import lib

@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from PiPerW.display.display_interface import DisplayInterface
+from PiPerW.interfaces.display_interface import DisplayInterface
 import digitalio
 import board
 from PIL import Image, ImageDraw

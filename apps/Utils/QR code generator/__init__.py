@@ -1,5 +1,5 @@
 
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 from PiPerW.helpers import Log

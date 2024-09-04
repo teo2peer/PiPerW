@@ -1,5 +1,5 @@
 import keyboard
-from PiPerW.pheripherals.pheripheral_interface import PheripheralInterface, PheripheralAction
+from PiPerW.interfaces.pheripheral_interface import PheripheralInterface, PheripheralAction
 import sys
 import RPi.GPIO as GPIO
 import time

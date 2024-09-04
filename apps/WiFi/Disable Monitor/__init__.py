@@ -7,7 +7,7 @@
 # disconnect all clients
 # sudo aireplay-ng --deauth 0 -a BSSID wlan0mon
 
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 from PiPerW.helpers import Log
