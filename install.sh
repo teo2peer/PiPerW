@@ -108,7 +108,7 @@ LOCAL_PATH=$(pwd)
 
 echo "Adding the startup script to crontab..."
 # Add the script to crontab
-sudo echo "@reboot root $LOCAL_PATH/PiPerW/lib/init/hid_script" | sudo tee -a /etc/crontab
+sudo echo "@reboot root $LOCAL_PATH/PiPerW/lib/gadget/hid_script" | sudo tee -a /etc/crontab
 
 
 # Indicate that the script execution is complete
