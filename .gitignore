@@ -18,7 +18,7 @@ PiPerW/lib/*
 !PiPerW/lib/README.md
 
 # Ignore logs
-PiPerW/logs/*
+logs/*
 !PiPerW/logs/README.md
 
 # Ignore music except some files
