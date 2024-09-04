@@ -1,8 +1,8 @@
 # Ignore compiled Python files
-*/__pycache__/*
-*.pyc
-*.pyo
-*.pyd
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
 
 # Ignore specific files
 config.toml
@@ -17,10 +17,10 @@ PiPerW/lib/*
 !PiPerW/lib/init/hid_script
 !PiPerW/lib/README.md
 
-# ignore logs
+# Ignore logs
 PiPerW/logs/*
 !PiPerW/logs/README.md
 
 # Ignore music except some files
-apps/PiFM/Play Music/music/*
-!apps/PiFM/Play Music/music/README.md
+apps/PiFM/Play_Music/music/*
+!apps/PiFM/Play_Music/music/README.md
