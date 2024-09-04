@@ -1,8 +1,9 @@
+from PiPerW.utils.Singleton import Singleton
 import logging
+import inspect
 from colorlog import ColoredFormatter
 import sys
-from PiPerW.utils.Singleton import Singleton
-import inspect
+import time
 
 
 #---------------------------
@@ -20,16 +21,13 @@ class Logging(metaclass=Singleton):
         # Initialize class variables
         self.debug = debug
         self.relative_path = relative_path
-
-        # rename output.log to output.old.log
-        try:
-            with open('output.log', 'r') as f:
-                pass
-            os.rename('output.log', 'output.old.log')
-        except:
-            pass
+        self.log_dir = 'logs/'
+        self.date_format = '%Y-%m-%d %H:%M:%S'
+        # save log in time format
+        self.log_name = str(time.strftime('%Y-%m-%d_%H-%M-%S'))+ '.log'
         
-        self.file_handler = logging.FileHandler('output.log')
+        
+        self.file_handler = logging.FileHandler('{}{}'.format(self.log_dir, self.log_name))
         self.console_handler = logging.StreamHandler(sys.stdout)
         self.console_handler.setLevel(logging.INFO)
 

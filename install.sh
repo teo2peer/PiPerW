@@ -106,8 +106,10 @@ preparing the hid_script
 sudo chmod +x ./PiPerW/lib/pheripherals/hid_script
 LOCAL_PATH=$(pwd)
 
+echo "Adding the startup script to crontab..."
 # Add the script to crontab
 sudo echo "@reboot root $LOCAL_PATH/PiPerW/lib/init/hid_script" | sudo tee -a /etc/crontab
+
 
 # Indicate that the script execution is complete
 echo "Script execution completed."

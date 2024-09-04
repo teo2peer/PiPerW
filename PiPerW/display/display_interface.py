@@ -89,10 +89,10 @@ class DisplayInterface(metaclass=Singleton):
             
         if self.save_image:
             # create tmp folder if not exists
-            if not os.path.exists("PiPerW/tmp"):
-            # replace or create image in PiPerW/tmp
-                os.makedirs("PiPerW/tmp")
-            image.save("PiPerW/tmp/display.png")
+            if not os.path.exists("tmp"):
+            # replace or create image in tmp
+                os.makedirs("tmp")
+            image.save("tmp/display.png")
         
         # rotate image if necessary
         if self.rotate != 0:
