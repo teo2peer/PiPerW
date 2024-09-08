@@ -70,7 +70,7 @@ def install():
     if Config['bluetooth']['ask_interface'] == True:
         Log.info("Searching for bluetooth interfaces")
         
-        interfaces = bluetooth.discover_devices(duration=8, lookup_names=True, lookup_ids=True, lookup_oui=True, lookup_oui=True, lookup_oui=True)
+        interfaces = bluetooth.discover_devices(duration=8, lookup_names=True)
 
         if not interfaces:
             Log.error("No bluetooth interfaces found")

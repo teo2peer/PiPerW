@@ -15,7 +15,7 @@ echo "Installing re4son kernel..."
 echo "deb http://http.re4son-kernel.com/re4son/ kali-pi main" > /etc/apt/sources.list.d/re4son.list
 wget -O - https://re4son-kernel.com/keys/http/archive-key.asc | apt-key add -
 sudo apt update
-sudo z apt install -y kalipi-kernel kalipi-bootloader kalipi-re4son-firmware kalipi-kernel-headers libraspberrypi0 libraspberrypi-dev libraspberrypi-doc libraspberrypi-bin
+sudo apt install -y kalipi-kernel kalipi-bootloader kalipi-re4son-firmware kalipi-kernel-headers libraspberrypi0 libraspberrypi-dev libraspberrypi-doc libraspberrypi-bin
 
 echo "Installing dependencies..."
 
@@ -77,39 +77,76 @@ sudo raspi-config nonint do_serial 0
 
 # Create and configure a swap file
 echo "Creating and configuring a swap file..."
-sudo dd if=/dev/zero of=/kali.swap.tmp bs=1024 count=2097152
-sudo mv /kali.swap.tmp /kali.swap
-sudo chmod 600 /kali.swap
 
-# Setting up the swap space
-echo "Setting up the swap space..."
-sudo mkswap /kali.swap
-sudo swapon /kali.swap
-sudo echo "/kali.swap none swap sw 0 0" >> /etc/fstab
+# check if the file exists
+if [ -f /kali.swap ]; then
+    echo "kali.swap already exists."
+else
+    sudo dd if=/dev/zero of=/kali.swap.tmp bs=1024 count=2097152
+    sudo mv /kali.swap.tmp /kali.swap
+    sudo chmod 600 /kali.swap
+
+    # Setting up the swap space
+    echo "Setting up the swap space..."
+    sudo mkswap /kali.swap
+    sudo swapon /kali.swap
+    sudo echo "/kali.swap none swap sw 0 0" >> /etc/fstab
+fi
+
+
 
 # adding otg support for bad_usb
-sudo echo dtoverlay=dwc2 | sudo tee -a /boot/config.txt
-sudo echo dwc2 | sudo tee -a /etc/modules
-sudo echo "libcomposite" | sudo tee -a /etc/modules
+echo "Adding OTG support for BadUSB..."
+
+# check if the line exists in the file
+if grep -q "dtoverlay=dwc2" /boot/config.txt; then
+    echo "dtoverlay=dwc2 already exists in /boot/config.txt."
+else
+    echo "dtoverlay=dwc2" | sudo tee -a /boot/config.txt
+fi
+
+if grep -q "dwc2" /etc/modules; then
+    echo "dwc2 already exists in /etc/modules."
+else
+    echo "dwc2" | sudo tee -a /etc/modules
+fi
+
+if grep -q "libcomposite" /etc/modules; then
+    echo "libcomposite already exists in /etc/modules."
+else
+    echo "libcomposite" | sudo tee -a /etc/modules
+fi
 
 
 echo "Creating a 4GB file for the USB drive..."
 # Create a 4gb file for the USB drive
-FILE=/PiPerW.img
-MNTPOINT=/mnt/usb_piperw
 
-dd if=/dev/zero of=$FILE bs=1M count=4096
-mkdosfs $FILE
+# check if the file exists
+if [ -f /PiPerW.img ]; then
+    echo "PiPerW.img already exists."
+else
+    FILE=/PiPerW.img
+    MNTPOINT=/mnt/usb_piperw
+
+    dd if=/dev/zero of=$FILE bs=1M count=4096
+    mkdosfs $FILE
+fi
+
+
 
 echo "Setting up the USB drive, keyboard, mouse..."
-preparing the hid_script
 sudo chmod +x ./PiPerW/lib/pheripherals/hid_script
 LOCAL_PATH=$(pwd)
 
 echo "Adding the startup script to crontab..."
 # Add the script to crontab
-sudo echo "@reboot root $LOCAL_PATH/PiPerW/lib/gadget/hid_script" | sudo tee -a /etc/crontab
 
+# check if the line exists in the file
+if grep -q "@reboot root $LOCAL_PATH/PiPerW/lib/gadget/hid_script" /etc/crontab; then
+    echo "The script is already added to crontab."
+else
+    echo "@reboot root $LOCAL_PATH/PiPerW/lib/gadget/hid_script" | sudo tee -a /etc/crontab
+fi
 
 # Indicate that the script execution is complete
 echo "Script execution completed."
