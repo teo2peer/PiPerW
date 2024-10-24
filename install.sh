@@ -19,16 +19,14 @@ sudo apt install -y kalipi-kernel kalipi-bootloader kalipi-re4son-firmware kalip
 
 echo "Installing dependencies..."
 
-sudo apt-get install python3-dev python3-pip libffi-dev libssl-dev direnv -y
-sudo apt-get install python3-numpy -y
-sudo apt-get install ifstat -y
-sudo apt-get install python3 python3-pip python3-pil libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libopenjp2-7   python3-dev python3-smbus i2c-tools python3-pip python3-venv fonts-dejavu bluez python3-bluez python3-toml -y
+sudo apt-get install python3 python3-dev python3-pip python3-virtualenv  -y
+sudo apt-get install ifstat libffi-dev libssl-dev direnv ondir virtualenv -y
+sudo apt-get install libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libopenjp2-7 i2c-tools fonts-dejavu bluez libgfortran5 libopenblas0-pthread -y
 sudo apt install git libgmp3-dev gawk qpdf bison flex make autoconf libtool texinfo -y
 
-sudo pip3 install --upgrade pip
-sudo pip3 install -r requirements.txt
-
-
+# install python packages modules
+echo "Installing python packages..."
+sudo apt-get install python3-numpy python3-pil  python3-dev python3-smbus python3-venv python3-bluez python3-toml  -y
 
 # Enable autologin by editing lightdm.conf
 echo "Enabling autologin by editing lightdm.conf..."
@@ -66,7 +64,8 @@ sudo service lightdm restart
 
 # Set the default systemd target to multi-user
 echo "Setting the default systemd target to 3..."
-sudo systemctl set-default runlevel3.target
+sudo systemctl set-default multi-user.target
+sudo systemctl isolate multi-user.target
 
 
 # Enable SPI, I2C, and Serial through raspi-config
@@ -134,7 +133,7 @@ fi
 
 
 
-echo "Setting up the USB drive, keyboard, mouse..."
+echo "Setting up the USB drive, keyboard, mouse... (MAY NOT WORK IF NOT REBOOTED. IF ERROR, REBOOT AND REEXECUTE THE SCRIPT)"
 sudo chmod +x ./PiPerW/lib/pheripherals/hid_script
 LOCAL_PATH=$(pwd)
 
@@ -148,5 +147,43 @@ else
     echo "@reboot root $LOCAL_PATH/PiPerW/lib/gadget/hid_script" | sudo tee -a /etc/crontab
 fi
 
+
+# https://www.piwheels.org/simple/numpy/numpy-2.1.2-cp311-cp311-linux_armv6l.whl#sha256=bc15ed0e1459a24de8f46d54edad0c6a04314e51e59cc9385bb6107549fd00e5
+
+add pip whells
+echo "Adding pip wheels..."
+touch /etc/pip.conf
+echo "[global]" >> /etc/pip.conf
+echo "extra-index-url=https://www.piwheels.org/simple" >> /etc/pip.conf
+
+
+#------------------------------------------------
+# !               UNABLE TO USE VENV BECAUSE NUMPY NOT POSIBLE TO BUILD 
+#------------------------------------------------
+
+# # Create a Python virtual environment in this directory
+# echo "Creating a Python virtual environment in this directory..."
+# sudo python3 -m venv env
+
+# # Install the required Python packages
+# echo "Installing the required Python packages..."
+# sudo env/bin/python -m pip install --upgrade pip
+# sudo env/bin/python -m pip install -r requirements.txt
+#------------------------------------------------
+# !               END VENV TRY
+#------------------------------------------------
+
+# normal
+# remove issue pip externally-managed-environment
+echo "Removing issue pip externally-managed-environment..."
+echo "break-system-packages = true" >> /etc/pip.conf
+
+# Install the required Python packages
+echo "Installing the required Python packages..."
+sudo python3 -m pip install --upgrade pip
+sudo python3 -m pip install -r requirements.txt
+
+
 # Indicate that the script execution is complete
 echo "Script execution completed."
+

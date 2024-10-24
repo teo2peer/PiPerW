@@ -103,6 +103,7 @@ class WThread(threading.Thread):
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, daemon=None):
         threading.Thread.__init__(self, group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
         self.exc = None
+        self.setDaemon(True)
         self._stop_event = threading.Event()
 
 

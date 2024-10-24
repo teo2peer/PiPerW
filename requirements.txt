@@ -1,3 +1,4 @@
+setuptools
 toml
 coloredlogs
 luma.oled
@@ -9,3 +10,4 @@ keyboard
 adafruit-circuitpython-rgb-display
 qrcode
 smbus
+numpy==1.26.4

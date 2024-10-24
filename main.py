@@ -31,7 +31,8 @@ def first_run():
         
         # Install packages
         Log.info("Installing packages")
-        os.system("sudo apt update && sudo apt upgrade -y")
+        # os.system("sudo apt update && sudo apt upgrade -y")
+        Log.warning("SKIPPING")
         
         
         # Restart program
