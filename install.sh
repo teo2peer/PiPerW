@@ -19,10 +19,10 @@ sudo apt install -y kalipi-kernel kalipi-bootloader kalipi-re4son-firmware kalip
 
 echo "Installing dependencies..."
 
-sudo apt-get install python3-dev python3-pip libffi-dev libssl-dev -y
+sudo apt-get install python3-dev python3-pip libffi-dev libssl-dev direnv -y
 sudo apt-get install python3-numpy -y
 sudo apt-get install ifstat -y
-sudo apt-get install python3 python3-pip python3-pil libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libopenjp2-7   python3-dev python3-smbus i2c-tools python3-pip python3-venv fonts-dejavu bluez python3-bluez -y
+sudo apt-get install python3 python3-pip python3-pil libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libopenjp2-7   python3-dev python3-smbus i2c-tools python3-pip python3-venv fonts-dejavu bluez python3-bluez python3-toml -y
 sudo apt install git libgmp3-dev gawk qpdf bison flex make autoconf libtool texinfo -y
 
 sudo pip3 install --upgrade pip
