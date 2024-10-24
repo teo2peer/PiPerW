@@ -269,7 +269,7 @@ class MenuFolder(Menu):
     
     def __init__(self, parent_folder, show_icons = False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
         '''
-        Initialize the menu
+        Initialize the menu with folders given a folder
         
         :param width: int: Width of the display
         :param height: int: Height of the display
@@ -309,7 +309,7 @@ class MenuFolderFiles(Menu):
     
     def __init__(self, folder, show_icons = False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10,  item_padding = 10, background_color=0, accent_color=255):
         '''
-        Initialize the menu
+        Initialize the menu with files given a folder
         
         :param width: int: Width of the display
         :param height: int: Height of the display
