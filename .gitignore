@@ -13,10 +13,10 @@ test.py
 tmp/*
 
 # Ignore lib except some files
-PiPerW/lib/*
 !PiPerW/lib/gadget/*
 PiPerW/lib/gadget/functions/*
 !PiPerW/lib/README.md
+# PiPerW/lib/*
 
 functions/*
 
