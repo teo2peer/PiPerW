@@ -223,7 +223,7 @@ else
 
 echo -e "${BLUE}Setting up the USB drive, keyboard, mouse... ${RED}(MAY NOT WORK IF NOT REBOOTED. IF ERROR, REBOOT AND REEXECUTE THE SCRIPT)${ENDCOLOR}"
 # create the gadget script
-sudo chmod +x ./PiPerW/lib/pheripherals/hid_script
+sudo chmod +x ./PiPerW/lib/gadget/hid_script
 LOCAL_PATH=$(pwd)
 
 echo -e "${BLUE}Adding the startup script to crontab...${ENDCOLOR}"

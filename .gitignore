@@ -14,7 +14,6 @@ tmp/*
 
 # Ignore lib except some files
 PiPerW/lib/*
-!PiPerW/lib/pheripherals/*
 !PiPerW/lib/gadget/*
 PiPerW/lib/gadget/functions/*
 !PiPerW/lib/README.md
