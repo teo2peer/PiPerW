@@ -205,7 +205,7 @@ echo -e "${BLUE}Adding OTG support for BadUSB...${ENDCOLOR}"
 
 # check if the line exists in the file
 if grep -q "dtoverlay=dwc2" /boot/config.txt; then
-    echo -e "${YELLOW}dtoverlay=dwc2 already exists in /boot/config.txt.   ${ENDCOLOR}"
+    echo -e "${YELLOW}dtoverlay=dwc2 already exists in /boot/config.txt.${ENDCOLOR}"
 else
     echo "dtoverlay=dwc2" | sudo tee -a /boot/config.txt
 fi
@@ -220,6 +220,7 @@ if grep -q "libcomposite" /etc/modules; then
     echo -e "${YELLOW}libcomposite already exists in /etc/modules.${ENDCOLOR}"
 else
     echo "libcomposite" | sudo tee -a /etc/modules
+fi
 
 echo -e "${BLUE}Setting up the USB drive, keyboard, mouse... ${RED}(MAY NOT WORK IF NOT REBOOTED. IF ERROR, REBOOT AND REEXECUTE THE SCRIPT)${ENDCOLOR}"
 # create the gadget script
@@ -243,8 +244,19 @@ fi
 # add pip whells
 echo -e "${BLUE}Adding pip wheels...${ENDCOLOR}"
 touch /etc/pip.conf
-echo "[global]" >> /etc/pip.conf
-echo "extra-index-url=https://www.piwheels.org/simple" >> /etc/pip.conf
+if grep -q "[global]" /etc/pip.conf; then
+    echo -e "${YELLOW}[global] already exists in /etc/pip.conf.${ENDCOLOR}"
+else
+    echo "[global]" | sudo tee -a /etc/pip.conf
+fi
+
+if grep -q "extra-index-url=https://www.piwheels.org/simple" /etc/pip.conf; then
+    echo -e "${YELLOW}extra-index-url=https://www.piwheels.org/simple already exists in /etc/pip.conf.${ENDCOLOR}"
+else
+    echo "extra-index-url=https://www.piwheels.org/simple" | sudo tee -a /etc/pip.conf
+fi
+
+
 
 
 #------------------------------------------------

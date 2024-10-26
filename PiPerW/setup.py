@@ -25,25 +25,37 @@ def install():
     
     
     
-    #---------------------------
-    #     Display driver
-    #---------------------------
-    Log.info("Searching for display drivers")
-    display_dir = DirFilter("PiPerW/display")
-    Log.info("Display drivers found: {}".format(display_dir.dirs()))
-    
-    selector = Selector(display_dir.dirs(), "Select a display driver")
-    selected = selector.select()
-    Log.info("Selected display driver: {}".format(selected))
-    
-    # if want display inverted
-    inverted = input("\nInvert display? (y/N): ")
-    if inverted.lower() == "y":
+    # Check if is a raspberry pi and if is using WaveShare OLED HAT
+    if os.path.exists("/proc/device-tree/model") and "raspberry" in open("/proc/device-tree/model").read().lower():
+        Log.warning("Raspberry Pi detected")
+        Log.info("Are you using WaveShare oled HAT with buttons?")
+        res = input("y/N: ")
+        
+        Log.info("Configuring for WaveShare OLED HAT")
+        Config['display']['driver'] = 'sh1106'
         Config['display']['rotate'] = 180
+        Config['pheripherals']['controllers'].append("waveshare_hat")
+        
     else:
-        Config['display']['rotate'] = 0
-    
-    Config['display']['driver'] = selected
+        #---------------------------
+        #     Display driver
+        #---------------------------
+        Log.info("Searching for display drivers")
+        display_dir = DirFilter("PiPerW/display")
+        Log.info("Display drivers found: {}".format(display_dir.dirs()))
+        
+        selector = Selector(display_dir.dirs(), "Select a display driver")
+        selected = selector.select()
+        Log.info("Selected display driver: {}".format(selected))
+        
+        # if want display inverted
+        inverted = input("\nInvert display? (y/N): ")
+        if inverted.lower() == "y":
+            Config['display']['rotate'] = 180
+        else:
+            Config['display']['rotate'] = 0
+        
+        Config['display']['driver'] = selected
     
     
     #---------------------------
@@ -70,7 +82,7 @@ def install():
     if Config['bluetooth']['ask_interface'] == True:
         Log.info("Searching for bluetooth interfaces")
         
-        interfaces = bluetooth.discover_devices(duration=8, lookup_names=True)
+        interfaces = bluetooth.discover_devices(duration=2, lookup_names=True)
 
         if not interfaces:
             Log.error("No bluetooth interfaces found")
