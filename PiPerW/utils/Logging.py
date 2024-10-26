@@ -89,6 +89,8 @@ class Logging(metaclass=Singleton):
         '''        
         self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
         self.logger.info(message)
+        
+        
     
     def warning(self, message):
         '''

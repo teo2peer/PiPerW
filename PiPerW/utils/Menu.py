@@ -1,11 +1,14 @@
 from PIL import Image, ImageDraw, ImageFont
 from PiPerW.helpers import DirFilter 
 from PiPerW.helpers import Log
+from PiPerW.pheripherals import Pheripherals
 from PiPerW.display import Display
 import os
 import re
 
 # FIXME: This is a workaround for avoiding passiing the width and height to the Menu class. Need to find a better solution instead of importing Display
+
+Pheripheral = Pheripherals()
 
 display = Display()
 class Menu:
@@ -53,6 +56,9 @@ class Menu:
         if pattern:
             Log.info("Filtering items")
             self.filter(pattern)
+        
+        if len(self.texts) < 1:
+            texts = ["Empty"]
         
         Log.info("Creating menu items")
         for i in range(len(self.texts)):
@@ -163,7 +169,7 @@ class Menu:
 
         # Calculate the y position of the first item
         y = self.vertical_margin
-        x = self.horizontal_margin
+        x = 0
 
         # Determine how many items to draw (add one extra to partially show the next item)
         end_index = min(self.start_index + self.max_items_on_screen + 1, len(self.items))
@@ -256,6 +262,8 @@ class Menu:
         
         return self.texts[self.index]
     
+    
+    
     def get_index(self):
         '''
         Get the selected item index
@@ -264,71 +272,92 @@ class Menu:
         '''
         
         return self.index
-        
-class MenuFolder(Menu):
     
-    def __init__(self, parent_folder, show_icons = False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding = 10, background_color=0, accent_color=255):
+    def choose(self):
         '''
-        Initialize the menu with folders given a folder
-        
-        :param width: int: Width of the display
-        :param height: int: Height of the display
-        :param font: ImageFont: Font to use for the menu
-        :param horizontal_margin: int: Horizontal margin for the menu
-        :param vertical_margin: int: Vertical margin for the menu
-        :param item_height: int: Height of each item in the menu
+        Choose the selected item
         '''
-        
-        # get all files in the folder
-        folders = DirFilter(parent_folder).folders()
-        
-        # get the icon of each folder
-        icons = []
-        for folder in folders:
-            if folder == "__pycache__":
-                continue
-            
-            # check if icon exists
-            if show_icons:
-                if not os.path.exists(f"{parent_folder}/{folder}/icon.bmp"):
-                    Log.warning(f"Icon not found for folder {folder}")
-                    icon = Image.open("PiPerW/display/no.bmp")
-                else:
-                    icon = Image.open(f"{parent_folder}/{folder}/icon.bmp")
-                icons.append(icon)
-            else:
-                icons = None
-            
+        print(self.texts)
+        self.show()
+        while True:
+            key = Pheripheral.get_key()
+            if key in ("up", "down"):
+                self.__handle_menu_navigation(key)
+            elif key == "select":
+                return self.get_selected()
+            elif key == "back" or key == "exit":
+                return None
         
         
-        super().__init__(folders, icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
+        
+    def __handle_key_press(key):
+        '''
+        Handle the key press
+        
+        :param key: str: The key pressed
+        :param menu: Menu: The menu object
+        '''
+        if key in ("up", "down", "select"):
+            self.__handle_menu_navigation(key)
+        elif key == "back":
+            return
 
-        
-    
-class MenuFolderFiles(Menu):
-    
-    def __init__(self, folder, show_icons = False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10,  item_padding = 10, background_color=0, accent_color=255):
+    def __handle_menu_navigation(key):
         '''
-        Initialize the menu with files given a folder
+        Handle the menu navigation
         
-        :param width: int: Width of the display
-        :param height: int: Height of the display
-        :param font: ImageFont: Font to use for the menu
-        :param horizontal_margin: int: Horizontal margin for the menu
-        :param vertical_margin: int: Vertical margin for the menu
-        :param item_height: int: Height of each item in the menu
+        :param key: str: The key pressed
+        :param menu: Menu: The menu object
         '''
+        if key == "up":
+            self.previous()
+        elif key == "down":
+            self.next()
+        self.show()
         
-        files = DirFilter(folder).files()
+
+
+class MenuBase(Menu):
+    
+    def __init__(self, items, folder, show_icons=False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding=10, background_color=0, accent_color=255):
+        
+        self.folder = folder
+        
+        icons = None
         if show_icons:
             icons = []
-            for file in files:
-                icon = Image.open(f"{folder}/{file}.bmp")
+            for item in items:
+                icon_path = f"{folder}/{item}/icon.bmp" if os.path.isdir(f"{folder}/{item}") else f"{folder}/{item}.bmp"
+                icon = Image.open(icon_path) if os.path.exists(icon_path) else Image.open("PiPerW/display/no.bmp")
                 icons.append(icon)
-        else:
-            icons = None
         
+        super().__init__(items, icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
+    
+    def get_full_path(self):
+        return f"{self.folder}/{self.get_selected()}"
+
+class MenuFolder(MenuBase):
+    
+    def __init__(self, parent_folder, show_icons=False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding=10, background_color=0, accent_color=255):
         
-        super().__init__(files, icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
+        folders = DirFilter(parent_folder).folders()
+        super().__init__(folders, parent_folder, show_icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
+
+
+class MenuFolderFiles(MenuBase):
     
+    def __init__(self, folder, show_icons=False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding=10, background_color=0, accent_color=255):
+        
+        files = DirFilter(folder).files()
+        super().__init__(files, folder, show_icons, pattern, font, horizontal_margin, vertical_margin,item_padding, background_color, accent_color)
+
+
+class MenuFromDataFolder(MenuBase):
     
+    def __init__(self, folder, type_items="file", show_icons=False, pattern=None, font=ImageFont.load_default(), horizontal_margin=10, vertical_margin=10, item_padding=10, background_color=0, accent_color=255):
+        
+        folder = f"data/{folder.strip('/')}"
+        os.makedirs(folder, exist_ok=True)
+        
+        items = DirFilter(folder).files() if type_items == "file" else DirFilter(folder).folders()
+        super().__init__(items, folder, show_icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)

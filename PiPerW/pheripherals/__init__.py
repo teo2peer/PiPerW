@@ -29,6 +29,7 @@ class Pheripherals(metaclass=Singleton):
         
         try:
             self.thread = WThread(target=self.loop)
+            self.thread.setDaemon(True)
             self.thread.start()
             time.sleep(1)
         except Exception as e:

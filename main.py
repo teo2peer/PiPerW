@@ -14,7 +14,7 @@ import time
 
 last_activity = 0
 Display = Display()
-Pherepheral = None
+Pheripheral = None
 
 def first_run():
     '''
@@ -73,10 +73,10 @@ def initialize_peripherals():
     ''' 
     Initialize the peripherals like keyboard, wave share hat, etc
     '''
-    global Pherepheral
+    global Pheripheral
     Log.warning("Initializing peripherals")
     try:
-        Pherepheral = importlib.import_module("PiPerW.pheripherals").Pheripherals()
+        Pheripheral = importlib.import_module("PiPerW.pheripherals").Pheripherals()
     except Exception as e:
         Log.exception(f"Error initializing peripherals: {e}")
         sys.exit(1)
@@ -119,7 +119,7 @@ def init():
         if check_last_activity():
             menu.show()
         
-        key = Pherepheral.get_key()
+        key = Pheripheral.await_key()
         handle_key_press(key, menu)
         if key == "back":
             break
@@ -131,10 +131,10 @@ def check_last_activity():
     '''
     
     global last_activity
-    if time.time() - Pherepheral.timestamp > Config['display']['timeout']:
+    if time.time() - Pheripheral.timestamp > Config['display']['timeout']:
         Log.warning("Screen timeout")
         Display.splashscreen()
-        Pherepheral.await_any_key_press()
+        Pheripheral.await_any_key_press()
         Log.info("Screen wakeup")
         last_activity = time.time()
         Display.stop_animation()
@@ -178,7 +178,7 @@ def app_finder(folder):
     apps_menu = MenuFolder(f"apps/{folder}", True)
     apps_menu.show()
     while True:
-        key = Pherepheral.get_key()
+        key = Pheripheral.await_key()
         if key in ("up", "down"):
             handle_menu_navigation(key, apps_menu)
         elif key == "select":
@@ -203,7 +203,7 @@ def execute_app(app, folder):
     except Exception as e:
         Log.exception(f"App crashed\n{app}: {e}")
         Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
-        Pherepheral.await_any_key_press()
+        Pheripheral.await_any_key_press()
         
     # check if exist in folder __on_exit__.py
     try:
@@ -219,7 +219,7 @@ def stop_app():
     '''
     Display.stop_animation()
     Display.text("Stopping PiPerW")
-    Pherepheral.stop()
+    Pheripheral.stop()
     
     Display.clear()
     
