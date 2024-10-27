@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from PiPerW.helpers import DirFilter 
 from PiPerW.helpers import Log
+from PiPerW.helpers import Config
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 import os
@@ -328,7 +329,7 @@ class MenuBase(Menu):
             icons = []
             for item in items:
                 icon_path = f"{folder}/{item}/icon.bmp" if os.path.isdir(f"{folder}/{item}") else f"{folder}/{item}.bmp"
-                icon = Image.open(icon_path) if os.path.exists(icon_path) else Image.open("PiPerW/display/no.bmp")
+                icon = Image.open(icon_path) if os.path.exists(icon_path) else Image.open(f"PiPerW/themes/{Config['general']['theme']}/resources/no.bmp")
                 icons.append(icon)
         
         super().__init__(items, icons, pattern, font, horizontal_margin, vertical_margin, item_padding, background_color, accent_color)
