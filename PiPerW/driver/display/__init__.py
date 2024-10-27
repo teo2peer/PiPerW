@@ -7,7 +7,7 @@ class Display:
 
     def _load_driver(self):
         try:
-            display_module = importlib.import_module(f"PiPerW.display.{Config['display']['driver']}")
+            display_module = importlib.import_module(f"PiPerW.driver.display.{Config['display']['driver']}")
             driver = display_module.Driver()
             driver.init()
             Log.info(f"Loaded and initialized display driver: {Config['display']['driver']}")
