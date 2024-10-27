@@ -1,0 +1,175 @@
+from enum import Enum
+from dataclasses import dataclass
+
+# Constants for Frequency Synthesizer
+CC1101_QUARTZ = 26000000
+CC1101_FMASK = 0xFFFFFF
+CC1101_FDIV = 0x10000
+CC1101_IFDIV = 0x400
+
+# IO Bus constants
+CC1101_TIMEOUT = 250
+
+# Bits and pieces
+CC1101_READ = 1 << 7
+CC1101_BURST = 1 << 6
+
+# Common registers
+CC1101_IOCFG2 = 0x00
+CC1101_IOCFG1 = 0x01
+CC1101_IOCFG0 = 0x02
+CC1101_FIFOTHR = 0x03
+CC1101_SYNC1 = 0x04
+CC1101_SYNC0 = 0x05
+CC1101_PKTLEN = 0x06
+CC1101_PKTCTRL1 = 0x07
+CC1101_PKTCTRL0 = 0x08
+CC1101_ADDR = 0x09
+CC1101_CHANNR = 0x0A
+CC1101_FSCTRL1 = 0x0B
+CC1101_FSCTRL0 = 0x0C
+CC1101_FREQ2 = 0x0D
+CC1101_FREQ1 = 0x0E
+CC1101_FREQ0 = 0x0F
+CC1101_MDMCFG4 = 0x10
+CC1101_MDMCFG3 = 0x11
+CC1101_MDMCFG2 = 0x12
+CC1101_MDMCFG1 = 0x13
+CC1101_MDMCFG0 = 0x14
+CC1101_DEVIATN = 0x15
+CC1101_MCSM2 = 0x16
+CC1101_MCSM1 = 0x17
+CC1101_MCSM0 = 0x18
+CC1101_FOCCFG = 0x19
+CC1101_BSCFG = 0x1A
+CC1101_AGCCTRL2 = 0x1B
+CC1101_AGCCTRL1 = 0x1C
+CC1101_AGCCTRL0 = 0x1D
+CC1101_WOREVT1 = 0x1E
+CC1101_WOREVT0 = 0x1F
+CC1101_WORCTRL = 0x20
+CC1101_FREND1 = 0x21
+CC1101_FREND0 = 0x22
+CC1101_FSCAL3 = 0x23
+CC1101_FSCAL2 = 0x24
+CC1101_FSCAL1 = 0x25
+CC1101_FSCAL0 = 0x26
+CC1101_RCCTRL1 = 0x27
+CC1101_RCCTRL0 = 0x28
+CC1101_FSTEST = 0x29
+CC1101_PTEST = 0x2A
+CC1101_AGCTEST = 0x2B
+CC1101_TEST2 = 0x2C
+CC1101_TEST1 = 0x2D
+CC1101_TEST0 = 0x2E
+
+# Strobe registers
+CC1101_STROBE_SRES = 0x30
+CC1101_STROBE_SFSTXON = 0x31
+CC1101_STROBE_SXOFF = 0x32
+CC1101_STROBE_SCAL = 0x33
+CC1101_STROBE_SRX = 0x34
+CC1101_STROBE_STX = 0x35
+CC1101_STROBE_SIDLE = 0x36
+CC1101_STROBE_SWOR = 0x38
+CC1101_STROBE_SPWD = 0x39
+CC1101_STROBE_SFRX = 0x3A
+CC1101_STROBE_SFTX = 0x3B
+CC1101_STROBE_SWORRST = 0x3C
+CC1101_STROBE_SNOP = 0x3D
+
+# Status registers
+CC1101_STATUS_PARTNUM = 0x30
+CC1101_STATUS_VERSION = 0x31
+CC1101_STATUS_FREQEST = 0x32
+CC1101_STATUS_LQI = 0x33
+CC1101_STATUS_RSSI = 0x34
+CC1101_STATUS_MARCSTATE = 0x35
+CC1101_STATUS_WORTIME1 = 0x36
+CC1101_STATUS_WORTIME0 = 0x37
+CC1101_STATUS_PKTSTATUS = 0x38
+CC1101_STATUS_VCO_VC_DAC = 0x39
+CC1101_STATUS_TXBYTES = 0x3A
+CC1101_STATUS_RXBYTES = 0x3B
+CC1101_STATUS_RCCTRL1_STATUS = 0x3C
+CC1101_STATUS_RCCTRL0_STATUS = 0x3D
+
+# Special registers
+CC1101_PATABLE = 0x3E
+CC1101_FIFO = 0x3F
+CC1101_IOCFG_INV = 1 << 6
+
+# Enumeration for IOCFG settings
+class CC1101Iocfg(Enum):
+    RxFifoThreshold = 0x00
+    RxFifoThresholdOrPacket = 0x01
+    TxFifoThreshold = 0x02
+    TxFifoFull = 0x03
+    RxOverflow = 0x04
+    TxUnderflow = 0x05
+    SyncWord = 0x06
+    Packet = 0x07
+    Preamble = 0x08
+    ClearChannel = 0x09
+    LockDetector = 0x0A
+    SerialClock = 0x0B
+    SerialSynchronousDataOutput = 0x0C
+    SerialDataOutput = 0x0D
+    CarrierSense = 0x0E
+    CrcOk = 0x0F
+    RxHardData1 = 0x16
+    RxHardData0 = 0x17
+    PaPd = 0x1B
+    LnaPd = 0x1C
+    RxSymbolTick = 0x1D
+    WorEvnt0 = 0x24
+    WorEvnt1 = 0x25
+    Clk256 = 0x26
+    Clk32k = 0x27
+    ChpRdyN = 0x29
+    XoscStable = 0x2B
+    HighImpedance = 0x2E
+    HW = 0x2F
+    ClkXosc1 = 0x30
+    ClkXosc1_5 = 0x31
+    ClkXosc2 = 0x32
+    ClkXosc3 = 0x33
+    ClkXosc4 = 0x34
+    ClkXosc6 = 0x35
+    ClkXosc8 = 0x36
+    ClkXosc12 = 0x37
+    ClkXosc16 = 0x38
+    ClkXosc24 = 0x39
+    ClkXosc32 = 0x3A
+    ClkXosc48 = 0x3B
+    ClkXosc64 = 0x3C
+    ClkXosc96 = 0x3D
+    ClkXosc128 = 0x3E
+    ClkXosc192 = 0x3F
+
+# Enumeration for CC1101 states
+class CC1101State(Enum):
+    IDLE = 0b000
+    RX = 0b001
+    TX = 0b010
+    FSTXON = 0b011
+    CALIBRATE = 0b100
+    SETTLING = 0b101
+    RXFIFO_OVERFLOW = 0b110
+    TXFIFO_UNDERFLOW = 0b111
+
+@dataclass
+class CC1101Status:
+    FIFO_BYTES_AVAILABLE: int = False
+    STATE: CC1101State = CC1101State.IDLE
+    CHIP_RDYn: bool = True
+
+@dataclass
+class CC1101TxBytes:
+    NUM_TXBYTES: int
+    TXFIFO_UNDERFLOW: bool
+
+@dataclass
+class CC1101RxBytes:
+    NUM_RXBYTES: int
+    RXFIFO_OVERFLOW: bool
