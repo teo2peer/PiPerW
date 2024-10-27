@@ -55,7 +55,7 @@ class Pheripherals(metaclass=Singleton):
         '''
         try:
             Log.warning("Registering controller: {}".format(controller))
-            module = importlib.import_module(f"PiPerW.pheripherals.{controller}").Pheripheral()
+            module = importlib.import_module(f"PiPerW.driver.pheripherals.{controller}").Pheripheral()
             self.controllers.append(module)
         except ImportError as e:
             Log.exception(f"Failed to register controller '{controller}': {e}")
