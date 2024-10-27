@@ -1,8 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 from PiPerW.helpers import DirFilter 
 from PiPerW.helpers import Log
-from PiPerW.pheripherals import Pheripherals
-from PiPerW.display import Display
+from PiPerW.driver.pheripherals import Pheripherals
+from PiPerW.driver.display import Display
 import os
 import re
 

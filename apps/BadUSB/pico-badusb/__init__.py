@@ -1,7 +1,7 @@
 from .badusb import BadUSB, DuckyScriptInterpreter
 from PiPerW.interfaces.app_interface import AppInterface
-from PiPerW.pheripherals import Pheripherals
-from PiPerW.display import Display
+from PiPerW.driver.pheripherals import Pheripherals
+from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github
 from PiPerW.utils.Menu import MenuFolderFiles
 import os, time, subprocess, multiprocessing

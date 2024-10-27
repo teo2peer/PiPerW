@@ -5,7 +5,7 @@
 
 from PiPerW.helpers import Config, WThread, Log
 from PiPerW.utils.Menu import MenuFolder
-from PiPerW.display import Display
+from PiPerW.driver.display import Display
 import importlib
 import multiprocessing
 import os
@@ -76,7 +76,7 @@ def initialize_peripherals():
     global Pheripheral
     Log.warning("Initializing peripherals")
     try:
-        Pheripheral = importlib.import_module("PiPerW.pheripherals").Pheripherals()
+        Pheripheral = importlib.import_module("PiPerW.driver.pheripherals").Pheripherals()
     except Exception as e:
         Log.exception(f"Error initializing peripherals: {e}")
         sys.exit(1)

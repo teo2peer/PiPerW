@@ -8,8 +8,8 @@
 # sudo aireplay-ng --deauth 0 -a BSSID wlan0mon
 
 from PiPerW.interfaces.app_interface import AppInterface
-from PiPerW.pheripherals import Pheripherals
-from PiPerW.display import Display
+from PiPerW.driver.pheripherals import Pheripherals
+from PiPerW.driver.display import Display
 from PiPerW.helpers import Log
 import os, time
 

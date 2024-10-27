@@ -1,6 +1,6 @@
 from PiPerW.interfaces.app_interface import AppInterface
-from PiPerW.pheripherals import Pheripherals
-from PiPerW.display import Display
+from PiPerW.driver.pheripherals import Pheripherals
+from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github, select_number
 from PiPerW.utils.Menu import Menu, MenuFromDataFolder
 import os, sys, time
