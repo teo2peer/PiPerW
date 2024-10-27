@@ -24,6 +24,9 @@ functions/*
 logs/*
 !PiPerW/logs/README.md
 
+# Ignore data
+data/*
+
 # Ignore music except some files
 apps/PiFM/Play_Music/music/*
 !apps/PiFM/Play_Music/music/README.md
