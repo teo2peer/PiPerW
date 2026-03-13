@@ -5,19 +5,23 @@ from PiPerW.helpers import Log
 from PiPerW.utils.Menu import Menu
 import subprocess
 import time
+import os
+import threading
+from datetime import datetime
 
 display = Display()
 
 class App(AppInterface):
-    name = "Bluetooth Tools"
+    name = "BlueKit (Bluetooth Tools)"
     version = "1.0"
 
     def __init__(self):
         super().__init__(self.name, self.version)
         self.menu = None
+        self.nearby = []
+        self.interface = "hci0"
 
     def check_adapter(self):
-        """Verifica si el adaptador bluetooth (hci0) existe y está encendido (UP)"""
         try:
             res = subprocess.run(["hciconfig"], capture_output=True, text=True)
             if "hci0" not in res.stdout:
@@ -29,8 +33,19 @@ class App(AppInterface):
             return False, "hciconfig missing"
 
     def run(self):
-        Log.info("Bluetooth Tools: starting")
-        options = ["Scan BLE Devices", "Discoverable Mode", "Toggle Power", "Exit"]
+        Log.info("BlueKit: starting. Reference: https://github.com/Cinnamon1212/BlueKit")
+        options = [
+            "Scan Classic",
+            "Scan BLE",
+            "Find Services",
+            "Pair Device",
+            "Send File",
+            "Discoverable",
+            "Sniff Packets",
+            "Spoof MAC",
+            "Toggle Power",
+            "Exit"
+        ]
         self.menu = Menu(options)
 
         while not self.is_stopped():
@@ -43,120 +58,244 @@ class App(AppInterface):
                 self.menu.next()
             elif key == "select":
                 sel = self.menu.get_selected()
-                Log.info(f"Bluetooth Tools: selected action '{sel}'")
+                Log.info(f"BlueKit: selected action '{sel}'")
                 if sel == "Exit":
-                    Log.info("Bluetooth Tools: exit requested")
                     break
                 else:
                     self.execute_action(sel)
             elif key == "back":
-                Log.info("Bluetooth Tools: back requested at root menu - ignoring")
                 display.text("App root menu:\n\nHold EXIT 3s\nto force quit")
                 time.sleep(1.5)
 
-        Log.info("Bluetooth Tools: exiting")
-
     def execute_action(self, action):
-        Log.info(f"Bluetooth Tools: executing action '{action}'")
         try:
-            if action == "Scan BLE Devices":
+            if action == "Scan Classic":
+                self.scan_classic()
+            elif action == "Scan BLE":
                 self.scan_ble()
-            elif action == "Discoverable Mode":
+            elif action == "Find Services":
+                self.scan_services()
+            elif action == "Pair Device":
+                self.pair_device()
+            elif action == "Send File":
+                self.send_file()
+            elif action == "Discoverable":
                 self.discoverable_mode()
+            elif action == "Sniff Packets":
+                self.sniff_packets()
+            elif action == "Spoof MAC":
+                self.spoof_mac()
             elif action == "Toggle Power":
                 self.toggle_power()
         except Exception as e:
-            Log.error(f"Bluetooth Tools: action '{action}' failed: {e}")
-            display.text(f"Error: {e}\n\nPress any key")
+            Log.error(f"BlueKit: action '{action}' failed: {e}")
+            display.text(f"Error:\n{e}\n\nPress any key")
             self.wait_for_input()
+
+    def scan_classic(self):
+        is_ok, status = self.check_adapter()
+        if not is_ok:
+            display.text(f"No Adapter\nStatus: {status}\nUse Toggle Power")
+            time.sleep(2)
+            return
+
+        display.text("Scanning classic...\n\n(Takes time)")
+        try:
+            import bluetooth
+            self.nearby = bluetooth.discover_devices(lookup_names=True)
+        except Exception as e:
+            Log.error(f"pybluez error: {e}")
+            display.text("Error scanning.\nCheck pybluez\ndependencies")
+            time.sleep(2)
+            return
+
+        if not self.nearby:
+            display.text("No devices found.\n\nPress BACK")
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
+            return
+
+        dev_list = [f"{n[:15]}: {a[-8:]}" for a, n in self.nearby]
+        res_menu = Menu(dev_list)
+        while not self.is_stopped():
+            display.draw(res_menu.generate())
+            k = self.wait_for_input()
+            if k == "up": res_menu.previous()
+            if k == "down": res_menu.next()
+            if k == "back": break
 
     def scan_ble(self):
         is_ok, status = self.check_adapter()
         if not is_ok:
-            Log.error(f"Bluetooth Tools: cannot scan, adapter status: {status}")
-            display.text(f"No Adapter or Down\nStatus: {status}\nUse Toggle Power!")
+            display.text(f"No Adapter\nStatus: {status}\nUse Toggle Power")
             time.sleep(2)
             return
 
-        Log.info("Bluetooth Tools: starting BLE scan")
         display.text("Scanning BLE...\n\nPress BACK to stop")
+        proc = subprocess.Popen(["sudo", "hcitool", "lescan"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        found_devices = set()
 
-        # hcitool is commonly available in bluez
-        proc = subprocess.Popen(
-            ["sudo", "hcitool", "lescan"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
+        def read_output(pipe):
+            try:
+                for line in iter(pipe.readline, ''):
+                    if not line: break
+                    line = line.strip()
+                    if ":" in line and "LE Scan" not in line: found_devices.add(line)
+            except Exception: pass
 
-        # Let the scan run for a few seconds or until the user presses BACK
+        t = threading.Thread(target=read_output, args=(proc.stdout,), daemon=True)
+        t.start()
+
         while not self.is_stopped():
             key = self.wait_for_input(process=proc)
-            if key == "back":
-                Log.info("Bluetooth Tools: BLE scan stopped by BACK key")
-                break
-            if key == "exit":
-                # Exit only works via long press; let Pheripherals handle it
-                continue
-            
-            # If the process has died unexpectedly, we must break the loop
+            if key == "back": break
             if proc.poll() is not None:
-                stdout_data, stderr_data = proc.communicate()
-                Log.error(f"Bluetooth Tools: BLE scan process ended unexpectedly with code {proc.poll()}. Stderr: {stderr_data.strip()}")
-                display.text("BLE scan ended\n(Maybe adapter down?)\n\nPress BACK")
-                # Wait for user acknowledgment instead of infinite loop
-                while not self.is_stopped():
-                    if self.wait_for_input() == "back":
-                        break
+                display.text("BLE scan ended\n\nPress BACK")
+                while not self.is_stopped() and self.wait_for_input() != "back": pass
                 break
 
-        Log.info("Bluetooth Tools: stopping BLE scan")
         if proc.poll() is None:
             proc.terminate()
-            # Failsafe cleanup for hcitool
-            res = subprocess.run(["sudo", "killall", "-9", "hcitool"], capture_output=True)
-            Log.debug(f"BLE scan cleanup return code: {res.returncode}")
+            subprocess.run(["sudo", "killall", "-9", "hcitool"], capture_output=True)
 
-    def discoverable_mode(self):
-        is_ok, status = self.check_adapter()
-        if not is_ok:
-            Log.error(f"Bluetooth Tools: cannot set discoverable, adapter status: {status}")
-            display.text(f"No Adapter or Down\nStatus: {status}\nUse Toggle Power!")
+        if not found_devices:
+            display.text("No BLE devices.\n\nPress BACK")
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
+        else:
+            dev_list = sorted(list(found_devices))
+            res_menu = Menu(dev_list)
+            while not self.is_stopped():
+                display.draw(res_menu.generate())
+                k = self.wait_for_input()
+                if k == "up": res_menu.previous()
+                if k == "down": res_menu.next()
+                if k == "back": break
+
+    def scan_services(self):
+        if not self.nearby:
+            display.text("Scan Classic first!\n\nPress BACK")
             time.sleep(2)
             return
 
-        Log.info("Bluetooth Tools: enabling discoverable mode")
-        display.text("Making device\ndiscoverable...")
+        dev_list = [f"{n[:15]}" for a, n in self.nearby]
+        sm = Menu(dev_list)
+        idx = 0
+        while not self.is_stopped():
+            display.draw(sm.generate())
+            k = self.wait_for_input()
+            if k == "up": sm.previous()
+            if k == "down": sm.next()
+            if k == "back": return
+            if k == "select":
+                idx = sm.selected
+                break
+        
+        addr, name = self.nearby[idx]
+        display.text(f"Scanning:\n{name[:10]}\nWait...")
+        try:
+            import bluetooth
+            services = bluetooth.find_service(address=addr)
+        except Exception as e:
+            display.text(f"Error: {e}")
+            time.sleep(2)
+            return
 
-        res_on = subprocess.run(["sudo", "bluetoothctl", "discoverable", "on"], capture_output=True, text=True)
-        Log.debug(f"Bluetoothctl on stdout: {res_on.stdout.strip()} stderr: {res_on.stderr.strip()} returncode: {res_on.returncode}")
-        time.sleep(1)
+        if not services:
+            display.text("No services.\n\nPress BACK")
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
+            return
+            
+        srv_list = [f"{s['name'][:10]} {s['port']}" for s in services]
+        res_menu = Menu(srv_list)
+        while not self.is_stopped():
+            display.draw(res_menu.generate())
+            k = self.wait_for_input()
+            if k == "up": res_menu.previous()
+            if k == "down": res_menu.next()
+            if k == "back": break
 
-        display.text("Device is now\ndiscoverable!\n\nPress any key to stop")
-        self.wait_for_input()
+    def pair_device(self):
+        if not self.nearby:
+            display.text("Scan Classic first!\n\nPress BACK")
+            time.sleep(2)
+            return
+        
+        dev_list = [f"{n[:15]}" for a, n in self.nearby]
+        sm = Menu(dev_list)
+        idx = 0
+        while not self.is_stopped():
+            display.draw(sm.generate())
+            k = self.wait_for_input()
+            if k == "up": sm.previous()
+            if k == "down": sm.next()
+            if k == "back": return
+            if k == "select":
+                idx = sm.selected
+                break
 
-        display.text("Turning off\ndiscoverable mode...")
-        res_off = subprocess.run(["sudo", "bluetoothctl", "discoverable", "off"], capture_output=True, text=True)
-        Log.debug(f"Bluetoothctl off stdout: {res_off.stdout.strip()} stderr: {res_off.stderr.strip()} returncode: {res_off.returncode}")
-        time.sleep(1)
+        addr, name = self.nearby[idx]
+        display.text(f"Pairing:\n{name[:15]}")
+        subprocess.run(["sudo", "bluetoothctl", "remove", addr], capture_output=True)
+        subprocess.run(["sudo", "bluetoothctl", "agent", "on"], capture_output=True)
+        subprocess.run(["sudo", "bluetoothctl", "trust", addr], capture_output=True)
+        subprocess.run(["sudo", "bluetoothctl", "pair", addr], capture_output=True)
+        display.text("Pairing sent.\nConnecting...")
+        time.sleep(2)
+        subprocess.run(["sudo", "bluetoothctl", "connect", addr], capture_output=True)
+        display.text("Done.\nCheck target.\nPress BACK")
+        while not self.is_stopped() and self.wait_for_input() != "back": pass
+
+    def send_file(self):
+        display.text("To send files:\nSet up in config\nnot yet native.\nBACK to exit")
+        while not self.is_stopped() and self.wait_for_input() != "back": pass
+
+    def discoverable_mode(self):
+        display.text("Discoverable ON...")
+        subprocess.run(["sudo", "bluetoothctl", "agent", "on"], capture_output=True)
+        subprocess.run(["sudo", "bluetoothctl", "discoverable", "on"], capture_output=True)
+        subprocess.run(["sudo", "bluetoothctl", "pairable", "on"], capture_output=True)
+        display.text("Device is visible!\n\nPress BACK to stop")
+        while not self.is_stopped() and self.wait_for_input() != "back": pass
+        subprocess.run(["sudo", "bluetoothctl", "discoverable", "off"], capture_output=True)
+
+    def sniff_packets(self):
+        display.text("Sniffing packets\nPress BACK to stop")
+        filename = f'bt_{datetime.now().strftime("%d%m%M")}.pcap'
+        out_path = os.path.join(self.get_state_dir(), filename)
+        
+        proc = subprocess.Popen(
+            ["sudo", "tshark", "-i", "bluetooth0", "-w", out_path],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        
+        while not self.is_stopped():
+            k = self.wait_for_input(process=proc)
+            if k == "back": break
+            if proc.poll() is not None: break
+            
+        if proc.poll() is None:
+            proc.terminate()
+            subprocess.run(["sudo", "killall", "tshark"], capture_output=True)
+            
+        display.text(f"Saved PCAP:\n{filename}\n\nPress BACK")
+        while not self.is_stopped() and self.wait_for_input() != "back": pass
+
+    def spoof_mac(self):
+        display.text("Spoofing MAC...\nRandomizing...")
+        res = subprocess.run(["sudo", "spooftooph", "-i", self.interface, "-R"], capture_output=True)
+        if res.returncode == 0:
+            display.text("Spoofed!\n\nPress BACK")
+        else:
+            display.text("Failed.\nIs spooftooph\ninstalled?\nPress BACK")
+        while not self.is_stopped() and self.wait_for_input() != "back": pass
 
     def toggle_power(self):
-        # Check current status using rfkill
         res = subprocess.run(["rfkill", "list", "bluetooth"], capture_output=True, text=True)
-        is_blocked = "Soft blocked: yes" in res.stdout
-        Log.debug(f"rfkill status: {res.stdout.strip()}")
-
-        if is_blocked:
-            display.text("Enabling Bluetooth...")
-            res2 = subprocess.run(["sudo", "rfkill", "unblock", "bluetooth"], capture_output=True, text=True)
-            Log.info(f"Bluetooth enabled (rc={res2.returncode})")
-            Log.debug(f"rfkill unblock output: {res2.stdout.strip()} {res2.stderr.strip()}")
-            subprocess.run(["sudo", "hciconfig", "hci0", "up"], capture_output=True)
+        if "Soft blocked: yes" in res.stdout:
+            display.text("Enabling BT...")
+            subprocess.run(["sudo", "rfkill", "unblock", "bluetooth"])
+            subprocess.run(["sudo", "hciconfig", "hci0", "up"])
         else:
-            display.text("Disabling Bluetooth...")
-            res2 = subprocess.run(["sudo", "rfkill", "block", "bluetooth"], capture_output=True, text=True)
-            Log.info(f"Bluetooth disabled (rc={res2.returncode})")
-            Log.debug(f"rfkill block output: {res2.stdout.strip()} {res2.stderr.strip()}")
-            subprocess.run(["sudo", "hciconfig", "hci0", "down"], capture_output=True)
-
+            display.text("Disabling BT...")
+            subprocess.run(["sudo", "rfkill", "block", "bluetooth"])
+            subprocess.run(["sudo", "hciconfig", "hci0", "down"])
         time.sleep(1.5)

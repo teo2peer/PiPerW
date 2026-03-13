@@ -1,10 +1,10 @@
 [app]
-name = "Bluetooth Tools"
+name = "BlueKit (Bluetooth Tools)"
 version = "1.0"
-description = "Herramientas de Bluetooth"
+description = "Basado en BlueKit: https://github.com/Cinnamon1212/BlueKit"
 author = "PiPerW"
 
 [requirements]
-apt = ["bluez", "bluez-tools"]
-pip = []
+apt = ["bluez", "bluez-tools", "tshark", "python3-dev", "libbluetooth-dev", "spooftooph"]
+pip = ["pybluez", "pyshark"]
 github = []
