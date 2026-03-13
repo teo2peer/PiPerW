@@ -210,16 +210,26 @@ def app_finder(folder):
 
 def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
     has_installed_something = False
+    total_reqs = len(apt_reqs) + len(pip_reqs) + len(git_reqs)
+    current_req = 0
+
+    def update_progress(msg):
+        nonlocal current_req
+        current_req += 1
+        pct = int(15 + (45 * (current_req / max(1, total_reqs))))
+        Display.progress_bar(pct, msg)
 
     # Check APT
     for pkg in apt_reqs:
         try:
             result = subprocess.run(['dpkg', '-s', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if result.returncode != 0:
-                Display.text(f"[{app_name[:10]}]\nInstalando APT:\n{pkg}")
+                update_progress(f"Instalando APT:\n{pkg[:15]}")
                 Log.info(f"Installing APT dependency for {app_name}: {pkg}")
                 subprocess.run(['sudo', 'apt-get', 'install', '-y', pkg])
                 has_installed_something = True
+            else:
+                update_progress(f"Check APT: {pkg[:10]}")
         except FileNotFoundError:
             Log.warning(f"dpkg not found, skipping apt dependency: {pkg}")
 
@@ -228,10 +238,12 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
         try:
             result = subprocess.run([sys.executable, '-m', 'pip', 'show', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if result.returncode != 0:
-                Display.text(f"[{app_name[:10]}]\nInstalando PIP:\n{pkg}")
+                update_progress(f"Instalando PIP:\n{pkg[:15]}")
                 Log.info(f"Installing PIP dependency for {app_name}: {pkg}")
                 subprocess.run([sys.executable, '-m', 'pip', 'install', pkg])
                 has_installed_something = True
+            else:
+                update_progress(f"Check PIP: {pkg[:10]}")
         except FileNotFoundError:
             Log.warning(f"pip not found, skipping pip dependency: {pkg}")
 
@@ -241,16 +253,18 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
             repo_name = repo_url.rstrip('/').split('/')[-1].replace('.git', '')
             target_path = os.path.join('lib', repo_name)
             if not os.path.exists(target_path):
-                Display.text(f"[{app_name[:10]}]\nClonando Repo:\n{repo_name[:10]}")
+                update_progress(f"Clonando:\n{repo_name[:15]}")
                 Log.info(f"Cloning GIT dependency for {app_name}: {repo_url}")
                 os.makedirs('lib', exist_ok=True)
                 subprocess.run(['git', 'clone', repo_url, target_path])
                 has_installed_something = True
+            else:
+                update_progress(f"Check GIT: {repo_name[:10]}")
         except FileNotFoundError:
             Log.warning(f"git not found, skipping git dependency: {repo_url}")
 
     if has_installed_something:
-        Display.text("Dependencias\nInstaladas!\nIniciando app...")
+        Display.progress_bar(60, "Configurando...")
         time.sleep(1)
 
 def execute_app(app, folder):
@@ -261,6 +275,9 @@ def execute_app(app, folder):
     :param folder: str: The folder of the app
     '''
     try:
+        # Prevent multiple loadings or confusing delays by showing immediate feedback
+        Display.progress_bar(0, "Cargando metadatos...")
+
         # Módulo de carga de Metadatos escalable (Manifiesto TOML externo)
         manifest_path = f"apps/{folder}/{app}/manifest.toml"
         app_name = app
@@ -283,15 +300,18 @@ def execute_app(app, folder):
             except Exception as e:
                 Log.error(f"[SRE] Error leyendo manifest.toml en {app}: {e}")
 
+        Display.progress_bar(15, "Chequeando deps...")
         # Resolver dependencias ANTES de cargar el módulo para evitar crash
         resolve_dependencies(app_name, app_req_apt, app_req_pip, app_req_git)
 
+        Display.progress_bar(60, "Importando librerias")
         Log.info(f"Loaded App: {app_name} v{app_version}")
         if app_req_apt or app_req_pip or app_req_git:
             Log.info(f"[{app_name}] Requisitos -> APT: {app_req_apt} | PIP: {app_req_pip} | GIT: {app_req_git}")
 
         module_name = f"apps.{folder}.{app}"
 
+        Display.progress_bar(90, "Iniciando app...")
         # Hot-reload support: if module is already loaded, reload it.
         if module_name in sys.modules:
             app_module_base = importlib.reload(sys.modules[module_name])

@@ -115,18 +115,7 @@ class App(AppInterface):
         ]
         self.menu = Menu(options)
 
-        self._action_thread = None
-        spinner = ["|", "/", "-", "\\"]
-        spinner_idx = 0
-
         while not self.is_stopped():
-            # If an action is running, show a loading spinner and ignore additional input
-            if self._action_thread and self._action_thread.is_alive():
-                display.text(f"Loading {spinner[spinner_idx]}")
-                spinner_idx = (spinner_idx + 1) % len(spinner)
-                time.sleep(0.1)
-                continue
-
             display.draw(self.menu.generate())
             key = self.wait_for_input()
             Log.debug(f"Menu key: {key}")
@@ -141,9 +130,8 @@ class App(AppInterface):
                 if sel == "Exit":
                     break
 
-                # Start the action in a separate thread so we can show a spinner and avoid double-pressing
-                self._action_thread = threading.Thread(target=self.execute_action, args=(sel,), daemon=True)
-                self._action_thread.start()
+                # Execute action directly (each action manages its own display and loading states)
+                self.execute_action(sel)
             elif key == "back":
                 display.text("App root menu:\n\nHold EXIT 3s\nto force quit")
                 time.sleep(1.5)
