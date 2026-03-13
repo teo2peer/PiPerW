@@ -78,6 +78,16 @@ class App(AppInterface):
             if key == "exit":
                 # Exit only works via long press; let Pheripherals handle it
                 continue
+            
+            # If the process has died unexpectedly, we must break the loop
+            if proc.poll() is not None:
+                Log.error(f"Bluetooth Tools: BLE scan process ended unexpectedly with code {proc.poll()}")
+                display.text("BLE scan ended\n(Maybe adapter down?)\n\nPress BACK")
+                # Wait for user acknowledgment instead of infinite loop
+                while not self.is_stopped():
+                    if self.wait_for_input() == "back":
+                        break
+                break
 
         Log.info("Bluetooth Tools: stopping BLE scan")
         if proc.poll() is None:
