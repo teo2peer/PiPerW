@@ -93,6 +93,11 @@ class App(AppInterface):
 
     def run(self):
         Log.info("BlueKit: starting. Reference: https://github.com/Cinnamon1212/BlueKit")
+        
+        # Pequeña pausa inicial para evitar que se pise el botón "Select" 
+        # que el usuario acaba de pulsar en el menú al abrir la aplicación.
+        time.sleep(0.5)
+
         options = [
             "Scan Classic",
             "Scan BLE",
