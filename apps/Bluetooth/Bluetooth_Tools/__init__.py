@@ -521,16 +521,16 @@ class App(AppInterface):
 
     def play_sound(self):
         Log.info("Play sound requested")
-        files_dir = os.path.join(self.get_state_dir(), "files")
-        os.makedirs(files_dir, exist_ok=True)
+        public_dir = self.get_public_dir()
+        music_dir = os.path.join(public_dir, "music")
 
-        files = [f for f in os.listdir(files_dir) if os.path.isfile(os.path.join(files_dir, f))]
+        files = [f for f in os.listdir(music_dir) if os.path.isfile(os.path.join(music_dir, f))]
         if not files:
-            display.text("No sound files in:\nstate/files/\n\nPress BACK")
+            display.text("No sound files in:\npublic/music/\n\nPress BACK")
             self.wait_for_back()
             return
 
-        fm = Menu(files)
+        fm = Menu([f[:15] for f in files])
         while not self.is_stopped():
             display.draw(fm.generate())
             key = self.wait_for_input()
@@ -544,7 +544,7 @@ class App(AppInterface):
                 file_idx = fm.get_index()
                 break
 
-        sound_file = os.path.join(files_dir, files[file_idx])
+        sound_file = os.path.join(music_dir, files[file_idx])
         display.text(f"Playing:\n{files[file_idx][:12]}")
         player = shutil.which("aplay") or shutil.which("paplay")
         if not player:
@@ -574,17 +574,24 @@ class App(AppInterface):
             self.wait_for_back()
             return
 
-        files_dir = os.path.join(self.get_state_dir(), "files")
-        os.makedirs(files_dir, exist_ok=True)
+        public_dir = self.get_public_dir()
+        
+        all_files = []
+        for category in ["music", "images", "files"]:
+            cat_dir = os.path.join(public_dir, category)
+            for f in os.listdir(cat_dir):
+                if os.path.isfile(os.path.join(cat_dir, f)):
+                    all_files.append((category, f))
 
-        files = os.listdir(files_dir)
-        Log.debug(f"Files available to send: {files}")
-        if not files:
-            display.text("No files found in:\nstate/files/\n\nPress BACK")
+        Log.debug(f"Files available to send: {all_files}")
+        if not all_files:
+            display.text("No files found in:\npublic/...\n\nPress BACK")
             self.wait_for_back()
             return
 
-        fm = Menu(files)
+        # Prepare strings for menu
+        menu_items = [f"{cat[:3]}/{fname}"[:15] for cat, fname in all_files]
+        fm = Menu(menu_items)
         while not self.is_stopped():
             display.draw(fm.generate())
             key = self.wait_for_input()
@@ -598,9 +605,9 @@ class App(AppInterface):
                 file_idx = fm.get_index()
                 break
 
-        selected_file = files[file_idx]
-        file_path = os.path.join(files_dir, selected_file)
-        Log.info(f"Sending file: {selected_file}")
+        selected_cat, selected_fname = all_files[file_idx]
+        file_path = os.path.join(public_dir, selected_cat, selected_fname)
+        Log.info(f"Sending file: {selected_fname} from {selected_cat}")
 
         dev_list = [f"{n[:15]}" for a, n in self.nearby]
         sm = Menu(dev_list)

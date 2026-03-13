@@ -13,6 +13,15 @@ class AppInterface:
     def __str__(self):
         return f"{self.name} {self.version}"
 
+    def get_public_dir(self):
+        """Returns the global structured 'public' directory at root."""
+        import os
+        base_dir = os.path.join(os.getcwd(), "public")
+        os.makedirs(os.path.join(base_dir, "music"), exist_ok=True)
+        os.makedirs(os.path.join(base_dir, "images"), exist_ok=True)
+        os.makedirs(os.path.join(base_dir, "files"), exist_ok=True)
+        return base_dir
+
     def get_state_dir(self):
         """Returns a guaranteed persistent directory for this app's files."""
         return self._state_dir
