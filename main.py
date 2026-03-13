@@ -213,32 +213,41 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
 
     # Check APT
     for pkg in apt_reqs:
-        result = subprocess.run(['dpkg', '-s', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if result.returncode != 0:
-            Display.text(f"[{app_name[:10]}]\nInstalando APT:\n{pkg}")
-            Log.info(f"Installing APT dependency for {app_name}: {pkg}")
-            subprocess.run(['sudo', 'apt-get', 'install', '-y', pkg])
-            has_installed_something = True
+        try:
+            result = subprocess.run(['dpkg', '-s', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if result.returncode != 0:
+                Display.text(f"[{app_name[:10]}]\nInstalando APT:\n{pkg}")
+                Log.info(f"Installing APT dependency for {app_name}: {pkg}")
+                subprocess.run(['sudo', 'apt-get', 'install', '-y', pkg])
+                has_installed_something = True
+        except FileNotFoundError:
+            Log.warning(f"dpkg not found, skipping apt dependency: {pkg}")
 
     # Check PIP
     for pkg in pip_reqs:
-        result = subprocess.run([sys.executable, '-m', 'pip', 'show', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if result.returncode != 0:
-            Display.text(f"[{app_name[:10]}]\nInstalando PIP:\n{pkg}")
-            Log.info(f"Installing PIP dependency for {app_name}: {pkg}")
-            subprocess.run([sys.executable, '-m', 'pip', 'install', pkg])
-            has_installed_something = True
+        try:
+            result = subprocess.run([sys.executable, '-m', 'pip', 'show', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if result.returncode != 0:
+                Display.text(f"[{app_name[:10]}]\nInstalando PIP:\n{pkg}")
+                Log.info(f"Installing PIP dependency for {app_name}: {pkg}")
+                subprocess.run([sys.executable, '-m', 'pip', 'install', pkg])
+                has_installed_something = True
+        except FileNotFoundError:
+            Log.warning(f"pip not found, skipping pip dependency: {pkg}")
 
     # Check GitHub
     for repo_url in git_reqs:
-        repo_name = repo_url.rstrip('/').split('/')[-1].replace('.git', '')
-        target_path = os.path.join('lib', repo_name)
-        if not os.path.exists(target_path):
-            Display.text(f"[{app_name[:10]}]\nClonando Repo:\n{repo_name[:10]}")
-            Log.info(f"Cloning GIT dependency for {app_name}: {repo_url}")
-            os.makedirs('lib', exist_ok=True)
-            subprocess.run(['git', 'clone', repo_url, target_path])
-            has_installed_something = True
+        try:
+            repo_name = repo_url.rstrip('/').split('/')[-1].replace('.git', '')
+            target_path = os.path.join('lib', repo_name)
+            if not os.path.exists(target_path):
+                Display.text(f"[{app_name[:10]}]\nClonando Repo:\n{repo_name[:10]}")
+                Log.info(f"Cloning GIT dependency for {app_name}: {repo_url}")
+                os.makedirs('lib', exist_ok=True)
+                subprocess.run(['git', 'clone', repo_url, target_path])
+                has_installed_something = True
+        except FileNotFoundError:
+            Log.warning(f"git not found, skipping git dependency: {repo_url}")
 
     if has_installed_something:
         Display.text("Dependencias\nInstaladas!\nIniciando app...")

@@ -262,7 +262,7 @@ class DuckyScriptInterpreter():
 
 
 class BadUSB:
-    def __init__(self, kbHidDirectory:str=Config["badusb"]["keyboard"], mouseHidDirectory:str=Config["badusb"]["mouse"], hidWriteType:str='rb+'):
+    def __init__(self, kbHidDirectory:str=Config.get("badusb", {}).get("keyboard", "/dev/hidg0"), mouseHidDirectory:str=Config.get("badusb", {}).get("mouse", "/dev/hidg1"), hidWriteType:str='rb+'):
         if os.path.exists(kbHidDirectory):
             pass
         else:

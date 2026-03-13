@@ -23,7 +23,7 @@ class Logging(metaclass=Singleton):
         '''
         
         # Initialize class variables
-        self.debug = debug
+        self._debug = debug
         self.relative_path = relative_path
         self.log_dir = 'logs/'
         self.date_format = '%Y-%m-%d %H:%M:%S'
@@ -66,7 +66,7 @@ class Logging(metaclass=Singleton):
         self.logger.addHandler(self.file_handler)
         
         # Display debug messages if debug is enabled
-        if self.debug:
+        if self._debug:
             self.logger.addHandler(stream)  # Adding the stream handler to the logger
 
         # Wrap the logger with LoggerAdapter to include extra context in log messages
@@ -91,14 +91,21 @@ class Logging(metaclass=Singleton):
     def info(self, message):
         '''
         Log an info message
-        
+
         :param message: str: Message to log
-        '''        
+        '''
         self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
         self.logger.info(message)
-        
-        
-    
+
+    def debug(self, message):
+        '''
+        Log a debug message
+
+        :param message: str: Message to log
+        '''
+        self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
+        self.logger.debug(message)
+
     def warning(self, message):
         '''
         Log a warning message

@@ -11,13 +11,13 @@ class Pheripheral(PheripheralInterface):
         self.name = "keyboard"
         self.start_time = time.time()
         
-        keyboard.on_press_key('up', lambda e: self.log_key(PheripheralAction.UP, 'up'))
-        keyboard.on_press_key('down', lambda e: self.log_key(PheripheralAction.DOWN, 'down'))
-        keyboard.on_press_key('left', lambda e: self.log_key(PheripheralAction.LEFT, 'left'))
-        keyboard.on_press_key('right', lambda e: self.log_key(PheripheralAction.RIGHT, 'right'))
-        keyboard.on_press_key('enter', lambda e: self.log_key(PheripheralAction.SELECT, 'enter'))
-        keyboard.on_press_key('esc', lambda e: self.log_key(PheripheralAction.BACK, 'esc'))
-        keyboard.on_press_key('q', lambda e: self.log_key(PheripheralAction.EXIT, 'q'))
+        keyboard.on_press_key('up', lambda e: self.handle_button_press(PheripheralAction.UP, 'up'))
+        keyboard.on_press_key('down', lambda e: self.handle_button_press(PheripheralAction.DOWN, 'down'))
+        keyboard.on_press_key('left', lambda e: self.handle_button_press(PheripheralAction.LEFT, 'left'))
+        keyboard.on_press_key('right', lambda e: self.handle_button_press(PheripheralAction.RIGHT, 'right'))
+        keyboard.on_press_key('enter', lambda e: self.handle_button_press(PheripheralAction.SELECT, 'enter'))
+        keyboard.on_press_key('esc', lambda e: self.handle_button_press(PheripheralAction.BACK, 'esc'))
+        keyboard.on_press_key('q', lambda e: self.handle_button_press(PheripheralAction.EXIT, 'q'))
     
     def handle_button_press(self, action: PheripheralAction, key: str):
         # Reset start time at each press
