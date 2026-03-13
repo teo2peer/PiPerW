@@ -1,7 +1,11 @@
 from PiPerW.utils.Singleton import Singleton
 import logging
 import inspect
-from colorlog import ColoredFormatter
+try:
+    from colorlog import ColoredFormatter
+except ImportError:
+    ColoredFormatter = None
+
 import sys
 import time
 
@@ -34,9 +38,12 @@ class Logging(metaclass=Singleton):
         # Set the log level for the logger
         LOG_LEVEL = logging.DEBUG
 
-        # Define a log format with color support
+        # Define a log format with optional color support
         LOGFORMAT = ('%(log_color)s%(asctime)s.%(msecs)03d %(levelname)s:  %(file)s -> %(function)s: %(message)s')
-        formatter = ColoredFormatter(LOGFORMAT)
+        if ColoredFormatter:
+            formatter = ColoredFormatter(LOGFORMAT)
+        else:
+            formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(file)s -> %(function)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
         # Set the root logger level to the debug level
         logging.root.setLevel(LOG_LEVEL)

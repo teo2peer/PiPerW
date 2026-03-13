@@ -16,6 +16,8 @@ class Pheripherals(metaclass=Singleton):
         self.key = None
         self.timestamp = 0
         self.force_app_kill = False # Dead Man's Switch flag
+        self.block_back = False  # When True, BACK key is ignored (used while an app is running)
+        self.suppress_exit = False  # When True, EXIT key is ignored (apps should be killed via long-press only)
         
         # Load controllers from config or use default keyboard
         if Config['pheripherals'].get('controllers'):
@@ -65,6 +67,12 @@ class Pheripherals(metaclass=Singleton):
         '''
         Get the latest key pressed.
         '''
+        if self.block_back and self.key == PheripheralAction.BACK:
+            return None
+
+        if self.suppress_exit and self.key == PheripheralAction.EXIT:
+            return None
+
         key = self.key.value if self.key else None
         self.key = None  # Reset key after fetching
         return key
@@ -113,20 +121,15 @@ class Pheripherals(metaclass=Singleton):
                 time.sleep(0.12)
                 
             # Hardware Trapping (Dead Man's Switch)
-            # If BACK is held continuously, track it
-            if self.key == PheripheralAction.BACK:
+            # If EXIT is held continuously, force app kill
+            if self.key == PheripheralAction.EXIT:
                 if back_held_start_time == 0:
                     back_held_start_time = time.time()
                 elif time.time() - back_held_start_time >= 3.0:
-                    Log.critical("HARDWARE TRAP: User held BACK for 3 seconds. Dispatching Kill Signal!")
+                    Log.critical("HARDWARE TRAP: User held EXIT for 3 seconds. Dispatching Kill Signal!")
                     self.force_app_kill = True
                     back_held_start_time = 0 # reset
             else:
                 back_held_start_time = 0 # reset if another key or no key
-
-                
-            if self.key == PheripheralAction.EXIT:
-                Log.info("Exit key detected, stopping loop.")
-                break
 
         Log.warning("Pheripherals loop ended.")
