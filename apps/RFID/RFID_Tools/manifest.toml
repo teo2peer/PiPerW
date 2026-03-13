@@ -1,0 +1,10 @@
+[app]
+name = "RFID Tools"
+version = "1.0"
+description = "Herramientas de clonado y lectura RFID 125kHz"
+author = "PiPerW"
+
+[requirements]
+apt = ["proxmark3"]
+pip = []
+github = []

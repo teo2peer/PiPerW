@@ -1,4 +1,4 @@
-from PiPerW.interfaces.app_interface import AppInterface
+from PiPerW.apps.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github
@@ -170,8 +170,12 @@ clean:
         
         display.text("Move to change frequency\nPress select to confirm")
         
-        while True:
-            key = pheripherals.await_key()
+        while not self.is_stopped():
+            key = pheripherals.get_key()
+            if key is None:
+                time.sleep(0.1)
+                continue
+                
             text = "Select frequency\n"
             if key == "right":
                 self.frequency += 0.1
@@ -185,7 +189,7 @@ clean:
                 self.frequency = round(self.frequency, 1)
                 break
             elif key == "back":
-                sys.exit()
+                return
             
             text += "Frequency: {:.1f}".format(self.frequency)
             display.text(text)
@@ -208,8 +212,12 @@ clean:
         # Run the executable with Popen
         process = self.run_executable(self.executable, ["-freq", self.frequency, "-audio",file])
         
-        pheripherals.await_any_key_press()
-        
+        while not self.is_stopped() and process.poll() is None:
+            key = pheripherals.get_key()
+            if key is not None:
+                break
+            time.sleep(0.1)
+
         display.text("Stopping PiFmRds")
         Log.info("Stopping noise generation of PiFmRds")
         

@@ -24,6 +24,7 @@ class WebServer:
         self.app = Flask(__name__)
         self.img = None
         self.old_img = None
+        self.display_tmp_path = "/tmp/piperw_display.png" if os.name == "posix" else "PiPerW/tmp/display.png"
         self.setup_routes()
 
     def setup_routes(self):
@@ -38,7 +39,11 @@ class WebServer:
         '''
         Capture the image to display
         '''
-        self.img = Image.open("PiPerW/tmp/display.png")
+        try:
+            self.img = Image.open(self.display_tmp_path)
+            self.img.load() # Force load into memory to prevent file lock issues
+        except Exception:
+            pass
 
     def generate_frames(self):
         '''
@@ -46,10 +51,11 @@ class WebServer:
         '''
         while True:
             # Check if the image has changed
-            if os.path.exists("PiPerW/tmp/display.png"):
-                if self.img is None or os.path.getmtime("PiPerW/tmp/display.png") != self.old_img:
+            if os.path.exists(self.display_tmp_path):
+                mtime = os.path.getmtime(self.display_tmp_path)
+                if self.img is None or mtime != self.old_img:
                     self.capture_image()
-                    self.old_img = os.path.getmtime("PiPerW/tmp/display.png")
+                    self.old_img = mtime
 
             # Check if the image is not None
             if self.img is not None:
@@ -80,7 +86,7 @@ class WebServer:
         '''
         Run the web server
         '''
-        self.app.run(debug=DEBUG)
+        self.app.run(debug=DEBUG, host='0.0.0.0', port=5000, use_reloader=False)
 
 
 # Start the web server

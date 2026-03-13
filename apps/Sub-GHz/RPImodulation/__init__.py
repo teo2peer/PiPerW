@@ -1,4 +1,4 @@
-from PiPerW.interfaces.app_interface import AppInterface
+from PiPerW.apps.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github, select_number
@@ -52,7 +52,7 @@ class App(AppInterface):
                 if res != 0:
                     Log.error("Failed to install libsndfile1-dev")
                     display.text("Failed to install libsndfile1-dev")
-                    pheripherals.await_any_key_press()
+                    self.wait_for_input(getattr(self, 'process', None))
                     raise SystemError("Failed to install libsndfile1-dev")
                 
                 
@@ -64,7 +64,7 @@ class App(AppInterface):
                     if res != 0:
                         Log.error("Failed to remove rpitx")
                         display.text("Failed to remove rpitx")
-                        pheripherals.await_any_key_press()
+                        self.wait_for_input(getattr(self, 'process', None))
                         raise SystemError("Failed to remove rpitx")
                 
                 download_lib_from_github("https://github.com/F5OEO/rpitx", "rpitx")
@@ -77,7 +77,7 @@ class App(AppInterface):
                 if res != 0:
                     Log.error("Failed to compile rpitx")
                     display.text("Failed to compile rpitx")
-                    pheripherals.await_any_key_press()
+                    self.wait_for_input(getattr(self, 'process', None))
                     raise SystemError("Failed to compile rpitx")
                 
                 Log.info("rpitx installed, reboot needed")
@@ -185,7 +185,7 @@ class App(AppInterface):
         # # Run the executable with Popen
         self.start_process(self.executable_root+"/tune", ["-f", str(self.frequency)+"e6"])
         
-        pheripherals.await_any_key_press()
+        self.wait_for_input(getattr(self, 'process', None))
         
         display.text("Stopping Carrier")
         Log.info("Stopping carrier wave")
@@ -211,7 +211,7 @@ class App(AppInterface):
         # # Run the executable with Popen
         self.start_process(self.executable_root+"/pichirp", [str(self.frequency)+"e6", str(bandwith), "5"] )
         
-        pheripherals.await_any_key_press()
+        self.wait_for_input(getattr(self, 'process', None))
         
         display.text("Stopping Chirp")
         Log.info("Stopping chirp wave")
@@ -227,15 +227,15 @@ class App(AppInterface):
         
         display.text("Select image to show")
         # png, jpg, bmp, etc regex pattern
-        image_menu = MenuFromDataFolder("Sub-GHz/RPImodulation", type_items="file", pattern=".*\.(png|jpg|bmp)")
+        image_menu = MenuFromDataFolder("Sub-GHz/RPImodulation", type_items="file", pattern=r".*\.(png|jpg|bmp)")
         image = image_menu.choose()
         image =image_menu.get_full_path()
         
         display.text("Showing spectrum image at frequency: "+str(self.frequency)+" MHz\nPress any key to stop")
         # pillow convert image to 320x256        
-        os.system(f"convert {image} -resize 320x256 -flip -quantize YUV -dither FloydSteinberg -colors 4 \-interlace partition /tmp/spectrum.yuv")
+        os.system(f"convert {image} -resize 320x256 -flip -quantize YUV -dither FloydSteinberg -colors 4 -interlace partition /tmp/spectrum.yuv")
         self.start_process(self.executable_root+"/spectrumpaint", ["/tmp/spectrum.yuv", str(self.frequency)+"e6", "100000"])
-        pheripherals.await_any_key_press()
+        self.wait_for_input(getattr(self, 'process', None))
         self.stop_process()
         
     def play_am_audio(self):
@@ -247,7 +247,7 @@ class App(AppInterface):
         
         display.text("Select audio file to play\nFile: wav, mp3, etc in MONO")
         # wav, mp3, etc regex pattern
-        audio_menu = MenuFromDataFolder("Sub-GHz/RPImodulation", type_items="file", pattern=".*\.(wav|mp3)")
+        audio_menu = MenuFromDataFolder("Sub-GHz/RPImodulation", type_items="file", pattern=r".*\.(wav|mp3)")
         audio_file = audio_menu.choose()
         audio_file = audio_menu.get_full_path()
         
@@ -260,7 +260,7 @@ class App(AppInterface):
 #   | sudo ./rpitx -i - -m IQFLOAT -f "$1" -s 48000
 
         self.start_process("bash", ["-c", f"(while true; do cat '{audio_file}'; done) | csdr convert_i16_f | csdr gain_ff 4.0 | csdr dsb_fc | {self.executable_root}/sendiq -s 48000 -f {self.frequency}e6 -t i16 -i -"])
-        pheripherals.await_any_key_press()
+        self.wait_for_input(getattr(self, 'process', None))
         self.stop_process()
         
         
@@ -287,5 +287,5 @@ class App(AppInterface):
         sample_rate = sample_rate.split(".")[0]
         
         self.start_process(self.executable_root+"/sendiq", ["-s", sample_rate, "-f", str(self.frequency)+"e6", "-t", tipe_file, "-i", iq_file])
-        pheripherals.await_any_key_press()
+        self.wait_for_input(getattr(self, 'process', None))
         self.stop_process()

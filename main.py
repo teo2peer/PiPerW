@@ -10,6 +10,7 @@ import importlib
 import multiprocessing
 import os
 import sys
+import subprocess
 import time
 
 last_activity = 0
@@ -81,6 +82,18 @@ def initialize_peripherals():
         Log.exception(f"Error initializing peripherals: {e}")
         sys.exit(1)
 
+def initialize_telemetry():
+    '''
+    Initialize the hardware telemetry loop to prevent overheating
+    '''
+    Log.info("Initializing hardware telemetry")
+    try:
+        telemetry_module = importlib.import_module("PiPerW.utils.telemetry")
+        telemetry = telemetry_module.HardwareTelemetry()
+        telemetry.start()
+    except Exception as e:
+        Log.warning(f"Failed to start hardware telemetry: {e}")
+
 def init():
     '''
     Initialize the PiPerW
@@ -110,6 +123,8 @@ def init():
 
     initialize_peripherals()
     Display.progress_bar(60, "PiPerW")
+
+    initialize_telemetry()
 
     Log.info("PiPerW initialized")
     menu = MenuFolder("apps", True)
@@ -171,11 +186,17 @@ def handle_menu_navigation(key, menu):
 def app_finder(folder):
     '''
     Find the app in the folder
-    
+
     :param folder: str: The folder to search
     '''
 
     apps_menu = MenuFolder(f"apps/{folder}", True)
+
+    if len(apps_menu.texts) == 0:
+        Display.text("No hay aplicaciones\nen esta carpeta.\n\n[BACK] para salir")
+        Pheripheral.await_any_key_press()
+        return
+
     apps_menu.show()
     while True:
         key = Pheripheral.await_key()
@@ -187,32 +208,92 @@ def app_finder(folder):
         elif key == "back" or key == "exit":
             break
 
+def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
+    has_installed_something = False
+
+    # Check APT
+    for pkg in apt_reqs:
+        result = subprocess.run(['dpkg', '-s', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if result.returncode != 0:
+            Display.text(f"[{app_name[:10]}]\nInstalando APT:\n{pkg}")
+            Log.info(f"Installing APT dependency for {app_name}: {pkg}")
+            subprocess.run(['sudo', 'apt-get', 'install', '-y', pkg])
+            has_installed_something = True
+
+    # Check PIP
+    for pkg in pip_reqs:
+        result = subprocess.run([sys.executable, '-m', 'pip', 'show', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if result.returncode != 0:
+            Display.text(f"[{app_name[:10]}]\nInstalando PIP:\n{pkg}")
+            Log.info(f"Installing PIP dependency for {app_name}: {pkg}")
+            subprocess.run([sys.executable, '-m', 'pip', 'install', pkg])
+            has_installed_something = True
+
+    # Check GitHub
+    for repo_url in git_reqs:
+        repo_name = repo_url.rstrip('/').split('/')[-1].replace('.git', '')
+        target_path = os.path.join('lib', repo_name)
+        if not os.path.exists(target_path):
+            Display.text(f"[{app_name[:10]}]\nClonando Repo:\n{repo_name[:10]}")
+            Log.info(f"Cloning GIT dependency for {app_name}: {repo_url}")
+            os.makedirs('lib', exist_ok=True)
+            subprocess.run(['git', 'clone', repo_url, target_path])
+            has_installed_something = True
+
+    if has_installed_something:
+        Display.text("Dependencias\nInstaladas!\nIniciando app...")
+        time.sleep(1)
+
 def execute_app(app, folder):
     '''
     Execute the app in a new thread
-    
+
     :param app: str: The app to execute
     :param folder: str: The folder of the app
     '''
     try:
+        # Módulo de carga de Metadatos escalable (Manifiesto TOML externo)
+        manifest_path = f"apps/{folder}/{app}/manifest.toml"
+        app_name = app
+        app_version = "1.0"
+        app_req_apt = []
+        app_req_pip = []
+        app_req_git = []
+
+        if os.path.exists(manifest_path):
+            try:
+                import toml
+                with open(manifest_path, "r", encoding="utf-8") as f:
+                    manifest = toml.load(f)
+                    app_name = manifest.get('app', {}).get('name', app)
+                    app_version = manifest.get('app', {}).get('version', '1.0')
+                    reqs = manifest.get('requirements', {})
+                    app_req_apt = reqs.get('apt', [])
+                    app_req_pip = reqs.get('pip', [])
+                    app_req_git = reqs.get('github', [])
+            except Exception as e:
+                Log.error(f"[SRE] Error leyendo manifest.toml en {app}: {e}")
+
+        # Resolver dependencias ANTES de cargar el módulo para evitar crash
+        resolve_dependencies(app_name, app_req_apt, app_req_pip, app_req_git)
+
+        Log.info(f"Loaded App: {app_name} v{app_version}")
+        if app_req_apt or app_req_pip or app_req_git:
+            Log.info(f"[{app_name}] Requisitos -> APT: {app_req_apt} | PIP: {app_req_pip} | GIT: {app_req_git}")
+
         module_name = f"apps.{folder}.{app}"
-        
+
         # Hot-reload support: if module is already loaded, reload it.
         if module_name in sys.modules:
             app_module_base = importlib.reload(sys.modules[module_name])
         else:
             app_module_base = importlib.import_module(module_name)
-            
+
         app_module = app_module_base.App()
 
         t = WThread(target=app_module.run)
-        
-        # Inject thread reference for safe zombie thread prevention
-        if hasattr(app_module, '_thread'):
-            app_module._thread = t
-            
         t.start()
-        
+
         # Non-blocking wait to keep main thread responsive
         while t.is_alive():
             if getattr(Pherepheral, 'force_app_kill', False):

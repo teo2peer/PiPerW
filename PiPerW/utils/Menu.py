@@ -276,40 +276,30 @@ class Menu:
     
     def choose(self):
         '''
-        Choose the selected item
+        Choose the selected item (Interactive loop)
         '''
+        if not self.texts:
+            display.text("No items found.\n\nPress any key")
+            from PiPerW.driver.pheripherals import Pheripherals
+            Pheripherals().await_any_key_press()
+            return None
+
+        from PiPerW.driver.pheripherals import Pheripherals
+        pheripherals = Pheripherals()
         
-        # get all files in the folder
-        raw_folders = DirFilter(parent_folder).folders()
-        folders = []
-        for folder in raw_folders:
-            if folder == "__pycache__" or folder.startswith("__"):
-                continue
-                
-            # Dependencias implicitas: Ensure the folder is a valid App with an __init__.py Manifest
-            app_init_path = os.path.join(parent_folder, folder, "__init__.py")
-            if parent_folder.startswith("apps") and not os.path.exists(app_init_path):
-                Log.warning(f"Ignored invalid app folder: {folder} (Missing __init__.py)")
-                continue
-                
-            folders.append(folder)
-        
-        # get the icon of each folder
-        icons = []
-        for folder in folders:
-            
-            # check if icon exists
-            if show_icons:
-                if not os.path.exists(f"{parent_folder}/{folder}/icon.bmp"):
-                    Log.warning(f"Icon not found for folder {folder}")
-                    icon = Image.open("PiPerW/display/no.bmp")
-                else:
-                    icon = Image.open(f"{parent_folder}/{folder}/icon.bmp")
-                icons.append(icon)
-            else:
-                icons = None
-            
-        
+        display.draw(self.generate())
+        while True:
+            key = pheripherals.await_key()
+            if key in ("up", "down", "select"):
+                if key == "up":
+                    self.previous()
+                elif key == "down":
+                    self.next()
+                elif key == "select":
+                    return self.get_selected()
+                display.draw(self.generate())
+            elif key == "back":
+                return None
         
         
     def __handle_key_press(key):

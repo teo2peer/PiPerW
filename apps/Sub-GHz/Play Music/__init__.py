@@ -1,4 +1,4 @@
-from PiPerW.interfaces.app_interface import AppInterface
+from PiPerW.apps.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github
@@ -160,20 +160,26 @@ clean:
         display.text("Select a music file to play, press any key to continue")
         
         # regex pattern to filter music files like mp3, wav, etc
-        menu = MenuFolderFiles(self.path+"/music", pattern=".*\.(mp3|wav|ogg|flac|aac|wma|m4a|mp4)$")
+        menu = MenuFolderFiles(self.path+"/music", pattern=r".*\.(mp3|wav|ogg|flac|aac|wma|m4a|mp4)$")
         
-        while True:
+        while not self.is_stopped():
             
             menu.show()
-            key = pheripherals.await_key()
+            
+            key = None
+            while not self.is_stopped() and not key:
+                key = pheripherals.get_key()
+                time.sleep(0.1)
+                
+            if self.is_stopped() or key == "back" or key == "exit":
+                break
+                
             if key == "up":
                 menu.previous()
             elif key == "down":
                 menu.next()
             elif key == "select":
                 self.play_music(menu.get_selected())
-            elif key == "back" or key == "exit":
-                break
             
     
     def select_frequency(self):
@@ -183,8 +189,12 @@ clean:
         
         display.text("Move to change frequency\nPress select to confirm")
         
-        while True:
-            key = pheripherals.await_key()
+        while not self.is_stopped():
+            key = pheripherals.get_key()
+            if key is None:
+                time.sleep(0.1)
+                continue
+                
             text = "Select frequency\n"
             if key == "right":
                 self.frequency += 0.1
@@ -197,7 +207,7 @@ clean:
             elif key == "select":
                 break
             elif key == "back":
-                sys.exit(0)
+                return
             
             self.frequency = round(self.frequency, 1)
             text += "Frequency: {:.1f}".format(self.frequency)
@@ -221,7 +231,11 @@ clean:
         # Run the executable with Popen
         process = self.run_executable(self.executable, ["-freq", self.frequency, "-audio", self.path + "/music/" + file])
         
-        pheripherals.await_any_key_press()
+        while not self.is_stopped() and process.poll() is None:
+            key = pheripherals.get_key()
+            if key is not None:
+                break
+            time.sleep(0.1)
         
         display.text("Stopping PiFmRds")
         Log.info("Stopping radio transmission of PiFmRds")

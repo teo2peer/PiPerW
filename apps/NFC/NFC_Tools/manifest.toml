@@ -1,0 +1,10 @@
+[app]
+name = "NFC Manager"
+version = "1.0"
+description = "Herramientas NFC básicas"
+author = "PiPerW"
+
+[requirements]
+apt = ["libnfc-bin", "pcscd"]
+pip = ["nfcpy"]
+github = ["https://github.com/nfc-tools/libnfc.git"]

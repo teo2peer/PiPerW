@@ -1,5 +1,5 @@
 
-from PiPerW.interfaces.app_interface import AppInterface
+from PiPerW.apps.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log
@@ -44,4 +44,4 @@ class App(AppInterface):
                 
         
         display.draw(self.generate_image())
-        pheripherals.await_any_key_press()
+        self.wait_for_input(getattr(self, 'process', None))
