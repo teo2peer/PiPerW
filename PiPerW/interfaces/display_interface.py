@@ -19,11 +19,11 @@ class DisplayInterface(metaclass=Singleton):
         self.vertical_margin = vertical_margin
 
 
-        if type_screen == "b" or type_screen == "1":
+        if type == "b" or type == "1":
             self.type = "1"
-        elif type_screen == "rgb" or type_screen == "RGB":
+        elif type == "rgb" or type == "RGB":
             self.type = "RGB"
-        
+
         # invert image x degr
         self.rotate = Config['display']['rotate']
         self.save_image =Config['display_cast']['default']
