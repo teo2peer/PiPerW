@@ -292,16 +292,20 @@ def execute_app(app, folder):
         app_module = app_module_base.App()
 
         t = WThread(target=app_module.run)
+        app_module._thread = t
         t.start()
 
         # Non-blocking wait to keep main thread responsive
         while t.is_alive():
-            if getattr(Pherepheral, 'force_app_kill', False):
+            if getattr(Pheripheral, 'force_app_kill', False):
                 Log.error(f"[SRE] Dead Man's Switch Triggered! Forcibly abandoning unrensponsive app: {app}")
-                t.stop() # set stop event 
-                Pherepheral.force_app_kill = False
+                t.stop() # set stop event
+                Pheripheral.force_app_kill = False
                 break # Regain UI Control immediately
             t.join(0.1)
+
+        if hasattr(t, 'exc') and t.exc:
+            raise t.exc
 
     except Exception as e:
         Log.exception(f"App crashed\n{app}: {e}")
