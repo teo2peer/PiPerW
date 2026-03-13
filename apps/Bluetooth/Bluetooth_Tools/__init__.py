@@ -16,6 +16,18 @@ class App(AppInterface):
         super().__init__(self.name, self.version)
         self.menu = None
 
+    def check_adapter(self):
+        """Verifica si el adaptador bluetooth (hci0) existe y está encendido (UP)"""
+        try:
+            res = subprocess.run(["hciconfig"], capture_output=True, text=True)
+            if "hci0" not in res.stdout:
+                return False, "No adapter"
+            if "UP RUNNING" not in res.stdout:
+                return False, "Adapter Down"
+            return True, "OK"
+        except FileNotFoundError:
+            return False, "hciconfig missing"
+
     def run(self):
         Log.info("Bluetooth Tools: starting")
         options = ["Scan BLE Devices", "Discoverable Mode", "Toggle Power", "Exit"]
@@ -59,14 +71,22 @@ class App(AppInterface):
             self.wait_for_input()
 
     def scan_ble(self):
+        is_ok, status = self.check_adapter()
+        if not is_ok:
+            Log.error(f"Bluetooth Tools: cannot scan, adapter status: {status}")
+            display.text(f"No Adapter or Down\nStatus: {status}\nUse Toggle Power!")
+            time.sleep(2)
+            return
+
         Log.info("Bluetooth Tools: starting BLE scan")
         display.text("Scanning BLE...\n\nPress BACK to stop")
 
         # hcitool is commonly available in bluez
         proc = subprocess.Popen(
             ["sudo", "hcitool", "lescan"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
         )
 
         # Let the scan run for a few seconds or until the user presses BACK
@@ -81,7 +101,8 @@ class App(AppInterface):
             
             # If the process has died unexpectedly, we must break the loop
             if proc.poll() is not None:
-                Log.error(f"Bluetooth Tools: BLE scan process ended unexpectedly with code {proc.poll()}")
+                stdout_data, stderr_data = proc.communicate()
+                Log.error(f"Bluetooth Tools: BLE scan process ended unexpectedly with code {proc.poll()}. Stderr: {stderr_data.strip()}")
                 display.text("BLE scan ended\n(Maybe adapter down?)\n\nPress BACK")
                 # Wait for user acknowledgment instead of infinite loop
                 while not self.is_stopped():
@@ -97,6 +118,13 @@ class App(AppInterface):
             Log.debug(f"BLE scan cleanup return code: {res.returncode}")
 
     def discoverable_mode(self):
+        is_ok, status = self.check_adapter()
+        if not is_ok:
+            Log.error(f"Bluetooth Tools: cannot set discoverable, adapter status: {status}")
+            display.text(f"No Adapter or Down\nStatus: {status}\nUse Toggle Power!")
+            time.sleep(2)
+            return
+
         Log.info("Bluetooth Tools: enabling discoverable mode")
         display.text("Making device\ndiscoverable...")
 
@@ -123,10 +151,12 @@ class App(AppInterface):
             res2 = subprocess.run(["sudo", "rfkill", "unblock", "bluetooth"], capture_output=True, text=True)
             Log.info(f"Bluetooth enabled (rc={res2.returncode})")
             Log.debug(f"rfkill unblock output: {res2.stdout.strip()} {res2.stderr.strip()}")
+            subprocess.run(["sudo", "hciconfig", "hci0", "up"], capture_output=True)
         else:
             display.text("Disabling Bluetooth...")
             res2 = subprocess.run(["sudo", "rfkill", "block", "bluetooth"], capture_output=True, text=True)
             Log.info(f"Bluetooth disabled (rc={res2.returncode})")
             Log.debug(f"rfkill block output: {res2.stdout.strip()} {res2.stderr.strip()}")
+            subprocess.run(["sudo", "hciconfig", "hci0", "down"], capture_output=True)
 
         time.sleep(1.5)
