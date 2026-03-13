@@ -60,7 +60,7 @@ class App(AppInterface):
 
     def scan_ble(self):
         Log.info("Bluetooth Tools: starting BLE scan")
-        display.text("Scanning BLE...\n\nHold EXIT 3s to stop")
+        display.text("Scanning BLE...\n\nPress BACK to stop")
 
         # hcitool is commonly available in bluez
         proc = subprocess.Popen(
