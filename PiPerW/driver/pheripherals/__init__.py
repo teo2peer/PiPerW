@@ -16,7 +16,6 @@ class Pheripherals(metaclass=Singleton):
         self.key = None
         self.timestamp = 0
         self.force_app_kill = False # Dead Man's Switch flag
-        self.block_back = False  # When True, BACK key is ignored (used while an app is running)
         self.suppress_exit = False  # When True, EXIT key is ignored (apps should be killed via long-press only)
         
         # Load controllers from config or use default keyboard
@@ -67,9 +66,6 @@ class Pheripherals(metaclass=Singleton):
         '''
         Get the latest key pressed.
         '''
-        if self.block_back and self.key == PheripheralAction.BACK:
-            return None
-
         if self.suppress_exit and self.key == PheripheralAction.EXIT:
             return None
 

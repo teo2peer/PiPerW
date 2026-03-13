@@ -35,7 +35,9 @@ class App(AppInterface):
                 else:
                     self.execute_action(sel)
             elif key == "back":
-                break
+                Log.info("RFID Tools: back requested at root menu - ignoring")
+                display.text("App root menu:\n\nHold EXIT 3s\nto force quit")
+                time.sleep(1.5)
 
     def execute_action(self, action):
         if action == "Read Card":

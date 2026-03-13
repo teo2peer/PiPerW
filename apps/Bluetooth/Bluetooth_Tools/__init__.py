@@ -38,8 +38,9 @@ class App(AppInterface):
                 else:
                     self.execute_action(sel)
             elif key == "back":
-                Log.info("Bluetooth Tools: back requested")
-                break
+                Log.info("Bluetooth Tools: back requested at root menu - ignoring")
+                display.text("App root menu:\n\nHold EXIT 3s\nto force quit")
+                time.sleep(1.5)
 
         Log.info("Bluetooth Tools: exiting")
 

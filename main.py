@@ -291,8 +291,7 @@ def execute_app(app, folder):
 
         app_module = app_module_base.App()
 
-        # Block BACK and short-press EXIT keys while inside the app (apps should only exit via long-press EXIT)
-        Pheripheral.block_back = True
+        # Short-press EXIT keys are ignored while inside the app (apps should only exit via long-press EXIT)
         Pheripheral.suppress_exit = True
 
         t = WThread(target=app_module.run)
@@ -316,8 +315,7 @@ def execute_app(app, folder):
         Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
         Pheripheral.await_any_key_press()
     finally:
-        # Restore BACK / EXIT handling after app exits
-        Pheripheral.block_back = False
+        # Restore EXIT handling after app exits
         Pheripheral.suppress_exit = False
 
     # check if exist in folder __on_exit__.py
