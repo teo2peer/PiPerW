@@ -152,12 +152,24 @@ def download_lib_from_github(url, lib_name):
 #---------------------------
 #     Congiguration file
 #---------------------------
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+config_path = BASE_DIR / 'config.toml'
+example_path = BASE_DIR / 'config.toml.example'
+
 # check if the config file exists
-if not os.path.exists('config.toml'):
+if not config_path.exists():
     # copy the default config file
-    os.system('cp config.toml.example config.toml')
+    import shutil
+    if example_path.exists():
+        shutil.copy(example_path, config_path)
+    else:
+        Log.warning("No config.toml.example found")
+
 Config = {}
-Config = toml.load('config.toml')  
+if config_path.exists():
+    Config = toml.load(str(config_path))  
 
 
 def save_config():
@@ -165,7 +177,7 @@ def save_config():
     Save the Configuration file
     '''
     Log.info("Saving configuration file")
-    with open('config.toml', 'w') as f:
+    with open(str(config_path), 'w') as f:
         toml.dump(Config, f)
         
 

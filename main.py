@@ -63,10 +63,10 @@ def initialize_web_server():
         Log.warning("Initializing web server")
         try:
             web = importlib.import_module("PiPerW.utils.Web").web_server
-            multiprocessing.Process(target=web.run).start()
+            multiprocessing.Process(target=web.run, daemon=True).start()
         except Exception as e:
-            Log.exception(f"Error initializing web server: {e}")
-            sys.exit(1)
+            Log.error(f"[Degraded Mode] Web server failed to start: {e}. Running without WebCast.")
+            # We removed sys.exit(1) to allow the rest of PiPerW to continue working locally
 
 def initialize_peripherals():
     ''' 
@@ -194,11 +194,33 @@ def execute_app(app, folder):
     :param folder: str: The folder of the app
     '''
     try:
-        app_module = importlib.import_module("apps.{}.{}".format(folder,app)).App()
+        module_name = f"apps.{folder}.{app}"
+        
+        # Hot-reload support: if module is already loaded, reload it.
+        if module_name in sys.modules:
+            app_module_base = importlib.reload(sys.modules[module_name])
+        else:
+            app_module_base = importlib.import_module(module_name)
+            
+        app_module = app_module_base.App()
 
         t = WThread(target=app_module.run)
+        
+        # Inject thread reference for safe zombie thread prevention
+        if hasattr(app_module, '_thread'):
+            app_module._thread = t
+            
         t.start()
-        t.join()
+        
+        # Non-blocking wait to keep main thread responsive
+        while t.is_alive():
+            if getattr(Pherepheral, 'force_app_kill', False):
+                Log.error(f"[SRE] Dead Man's Switch Triggered! Forcibly abandoning unrensponsive app: {app}")
+                t.stop() # set stop event 
+                Pherepheral.force_app_kill = False
+                break # Regain UI Control immediately
+            t.join(0.1)
+
     except Exception as e:
         Log.exception(f"App crashed\n{app}: {e}")
         Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
@@ -207,10 +229,33 @@ def execute_app(app, folder):
     # check if exist in folder __on_exit__.py
     try:
         Display.text("Executing on exit script")
-        on_exit = importlib.import_module(f"apps.{folder}.__on_exit__").Execute()
-        on_exit.__init__()
+        on_exit_module_name = f"apps.{folder}.__on_exit__"
+        
+        # Hot-reload support for the exit script
+        if on_exit_module_name in sys.modules:
+            on_exit_base = importlib.reload(sys.modules[on_exit_module_name])
+        else:
+            on_exit_base = importlib.import_module(on_exit_module_name)
+            
+        on_exit = on_exit_base.Execute()
+        
+        # Catch internal crashes inside __on_exit__ so it doesn't break Menu
+        try:
+            # Execute the cleanup routine within a monitored thread 
+            # to avoid stuck While True loops
+            cleanup_thread = WThread(target=on_exit.__init__)
+            cleanup_thread.start()
+            cleanup_thread.join(timeout=3.0) # Abort drastically after 3 seconds timeout
+            
+            if cleanup_thread.is_alive():
+                Log.error("Cleanup script timed out! Forcefully continuing.")
+        except Exception as e_exit:
+            Log.error(f"Error inside on exit script: {e_exit}")
+            
     except ImportError:
         pass
+    except Exception as e:
+        Log.error(f"Failed to load on exit script: {e}")
 
 def stop_app():
     '''

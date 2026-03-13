@@ -66,8 +66,14 @@ sudo service lightdm restart
 echo "Setting the default systemd target to 3..."
 sudo systemctl set-default runlevel3.target
 
+#TODO 
+# check if file /sys/firmware/devicetree/base/model exists
+#  check if is rpi
+# chec if is rpi 0 for badusb
+
 
 # Enable SPI, I2C, and Serial through raspi-config
+
 echo "Enabling SPI, I2C, and Serial interfaces using raspi-config..."
 sudo raspi-config nonint do_spi 0
 sudo raspi-config nonint do_i2c 0

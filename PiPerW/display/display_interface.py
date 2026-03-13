@@ -4,11 +4,12 @@ import numpy as np
 import importlib
 from PiPerW.helpers import WThread, Config, Log 
 import os, time
-
+import threading
 
 
 class DisplayInterface(metaclass=Singleton):
     def __init__(self, width, height, item_height=16, horizontal_margin=10, vertical_margin=10, type="b"):
+        self.lock = threading.Lock()
         self.width = width
         self.height = height
         
@@ -48,29 +49,34 @@ class DisplayInterface(metaclass=Singleton):
     
     # DO NOT MODIFY
     def draw(self, image):
-        print("Drawing image")
-        # check if image is a buffer, pillow or normal image
-        if type(image) == np.ndarray:
-            image = Image.fromarray(image)
-        elif type(image) != Image.Image:
-            raise ValueError("Image must be a buffer, pillow or normal image")
-        
-        # Resize with same aspect ratio
-        if(self.type == "RGB"):
-            image = self.convert_to_rgb(image)
+        with self.lock:
+            print("Drawing image")
+            # check if image is a buffer, pillow or normal image
+            if type(image) == np.ndarray:
+                image = Image.fromarray(image)
+            elif type(image) != Image.Image:
+                raise ValueError("Image must be a buffer, pillow or normal image")
             
-        if self.save_image:
-            # create tmp folder if not exists
-            if not os.path.exists("PiPerW/tmp"):
-            # replace or create image in PiPerW/tmp
-                os.makedirs("PiPerW/tmp")
-            image.save("PiPerW/tmp/display.png")
-        
-        # rotate image if necessary
-        if self.rotate != 0:
-            image = image.rotate(self.rotate)
-        
-        self.show(image)
+            # Resize with same aspect ratio
+            if(self.type == "RGB"):
+                image = self.convert_to_rgb(image)
+                
+            if self.save_image:
+                import platform
+                if platform.system() == "Linux":
+                    # For Linux/Raspberry Pi, use /tmp (RAM-disk) to avoid MicroSD wear
+                    image.save("/tmp/piperw_display.png")
+                else:
+                    # Windows/Dev fallback
+                    if not os.path.exists("PiPerW/tmp"):
+                        os.makedirs("PiPerW/tmp")
+                    image.save("PiPerW/tmp/display.png")
+            
+            # rotate image if necessary
+            if self.rotate != 0:
+                image = image.rotate(self.rotate)
+            
+            self.show(image)
         
     def image(self, image):
         '''

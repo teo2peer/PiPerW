@@ -12,6 +12,7 @@ class Pheripherals(metaclass=Singleton):
         self.controllers = []
         self.key = None
         self.timestamp = 0
+        self.force_app_kill = False # Dead Man's Switch flag
         
         if Config['pheripherals']['controllers']:
             for controller in Config['pheripherals']['controllers']:
@@ -62,6 +63,8 @@ class Pheripherals(metaclass=Singleton):
         
     def loop(self):
         Log.info("Pheripherals loop started")
+        back_held_start_time = 0
+        
         while True:
             if self.thread.stopped():
                 break
@@ -83,7 +86,18 @@ class Pheripherals(metaclass=Singleton):
             # check if is long press
             if key:
                 time.sleep(0.12)
-            
+                
+            # Hardware Trapping (Dead Man's Switch)
+            # If BACK is held continuously, track it
+            if self.key == PheripheralAction.BACK:
+                if back_held_start_time == 0:
+                    back_held_start_time = time.time()
+                elif time.time() - back_held_start_time >= 3.0:
+                    Log.critical("HARDWARE TRAP: User held BACK for 3 seconds. Dispatching Kill Signal!")
+                    self.force_app_kill = True
+                    back_held_start_time = 0 # reset
+            else:
+                back_held_start_time = 0 # reset if another key or no key
 
                 
             if self.key == PheripheralAction.EXIT:

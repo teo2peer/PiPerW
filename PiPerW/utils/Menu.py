@@ -280,13 +280,23 @@ class MenuFolder(Menu):
         '''
         
         # get all files in the folder
-        folders = DirFilter(parent_folder).folders()
+        raw_folders = DirFilter(parent_folder).folders()
+        folders = []
+        for folder in raw_folders:
+            if folder == "__pycache__" or folder.startswith("__"):
+                continue
+                
+            # Dependencias implicitas: Ensure the folder is a valid App with an __init__.py Manifest
+            app_init_path = os.path.join(parent_folder, folder, "__init__.py")
+            if parent_folder.startswith("apps") and not os.path.exists(app_init_path):
+                Log.warning(f"Ignored invalid app folder: {folder} (Missing __init__.py)")
+                continue
+                
+            folders.append(folder)
         
         # get the icon of each folder
         icons = []
         for folder in folders:
-            if folder == "__pycache__":
-                continue
             
             # check if icon exists
             if show_icons:

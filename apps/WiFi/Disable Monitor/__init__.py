@@ -32,11 +32,15 @@ class App(AppInterface):
         display.text("Disabling Monitor Mode")
         time.sleep(1)
         
-        
-        os.system("sudo airmon-ng stop wlan0mon")
+        import subprocess
+        result = subprocess.run(["sudo", "airmon-ng", "stop", "wlan0mon"], capture_output=True, text=True)
+        if result.returncode != 0:
+            Log.error(f"Failed to stop monitor mode: {result.stderr}")
+            display.text("Error stopping mode")
+        else:    
+            Log.info("Monitor mode disabled")
+            display.text("Monitor mode disabled")
             
-        Log.info("Monitor mode disabled")
-        display.text("Monitor mode disabled")
         pheripherals.await_any_key_press()
         
         
