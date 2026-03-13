@@ -103,6 +103,7 @@ class WThread(threading.Thread):
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, daemon=None):
         threading.Thread.__init__(self, group=group, target=target, name=name, args=args, kwargs=kwargs, daemon=daemon)
         self.exc = None
+        self.setDaemon(True)
         self._stop_event = threading.Event()
 
 
@@ -147,6 +148,50 @@ def download_lib_from_github(url, lib_name):
         raise Exception("Error downloading the library")
 
 
+def select_number(display, pheripherals, title="Select a number", start_number=0, scale=1, decimals=0, min=-99999, max=99999, unit = None):
+    '''
+    Select number with options for scaling and decimal places
+    '''
+    
+    multiplier = 1
+    number = start_number
+    if start_number < min:
+        number = min
+    if start_number > max:
+        number = max
+    while True:
+        text = "\n"
+        text += title + "\n"
+        if not unit:
+            text += "Number: {}\n".format(round(number, decimals))  # Round number to the correct decimal places
+        else:
+            text += "{} {}\n".format(round(number, decimals), unit)
+        text += "Multiplier: {}\n ↕ to modify".format(multiplier)
+        display.text(text)
+        
+        key = pheripherals.await_key()
+        
+        if key == "right":
+            number += (1 * multiplier * scale) / (10 ** decimals)
+            if number > max:
+                number = max  # Fix condition to cap the number at the maximum
+        elif key == "left":
+            number -= (1 * multiplier * scale) / (10 ** decimals)
+            if number < min:
+                number = min  # Fix condition to cap the number at the minimum
+        elif key == "up":
+            multiplier = multiplier * 10 if multiplier < 1000 else 1000
+        elif key == "down":
+            multiplier = multiplier / 10 if multiplier > 1 else 1
+        elif key == "select":
+            break
+        elif key == "back":
+            sys.exit(0)
+        
+        # Ensure number is rounded to the appropriate decimal places
+        number = round(number, decimals)
+    
+    return number
 
 
 #---------------------------

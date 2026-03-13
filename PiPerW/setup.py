@@ -1,7 +1,7 @@
 from PiPerW.helpers import Config, Log, DirFilter, Selector, save_config
 import os
 import psutil
-
+import bluetooth
 
 
 def install():
@@ -25,25 +25,37 @@ def install():
     
     
     
-    #---------------------------
-    #     Display driver
-    #---------------------------
-    Log.info("Searching for display drivers")
-    display_dir = DirFilter("PiPerW/display")
-    Log.info("Display drivers found: {}".format(display_dir.dirs()))
-    
-    selector = Selector(display_dir.dirs(), "Select a display driver")
-    selected = selector.select()
-    Log.info("Selected display driver: {}".format(selected))
-    
-    # if want display inverted
-    inverted = input("\nInvert display? (y/N): ")
-    if inverted.lower() == "y":
+    # Check if is a raspberry pi and if is using WaveShare OLED HAT
+    if os.path.exists("/proc/device-tree/model") and "raspberry" in open("/proc/device-tree/model").read().lower():
+        Log.warning("Raspberry Pi detected")
+        Log.info("Are you using WaveShare oled HAT with buttons?")
+        res = input("y/N: ")
+        
+        Log.info("Configuring for WaveShare OLED HAT")
+        Config['display']['driver'] = 'sh1106'
         Config['display']['rotate'] = 180
+        Config['pheripherals']['controllers'].append("waveshare_hat")
+        
     else:
-        Config['display']['rotate'] = 0
-    
-    Config['display']['driver'] = selected
+        #---------------------------
+        #     Display driver
+        #---------------------------
+        Log.info("Searching for display drivers")
+        display_dir = DirFilter("PiPerW/display")
+        Log.info("Display drivers found: {}".format(display_dir.dirs()))
+        
+        selector = Selector(display_dir.dirs(), "Select a display driver")
+        selected = selector.select()
+        Log.info("Selected display driver: {}".format(selected))
+        
+        # if want display inverted
+        inverted = input("\nInvert display? (y/N): ")
+        if inverted.lower() == "y":
+            Config['display']['rotate'] = 180
+        else:
+            Config['display']['rotate'] = 0
+        
+        Config['display']['driver'] = selected
     
     
     #---------------------------
@@ -70,12 +82,17 @@ def install():
     if Config['bluetooth']['ask_interface'] == True:
         Log.info("Searching for bluetooth interfaces")
         
-        addrs = list(psutil.net_if_addrs().keys())
-        interfaces = []
-        Log.info("Bluetooth interfaces found: {}".format(addrs))
-        
-        selector = Selector(addrs, "Select a bluetooth interface")
-        selected = selector.select()
+        interfaces = bluetooth.discover_devices(duration=2, lookup_names=True)
+
+        if not interfaces:
+            Log.error("No bluetooth interfaces found")
+            selected = None
+        else:
+            addrs = [x[0] for x in interfaces]
+            Log.info("Bluetooth interfaces found: {}".format(addrs))
+            
+            selector = Selector(addrs, "Select a bluetooth interface")
+            selected = selector.select()
         Log.info("Selected bluetooth interface: {}".format(selected))
         
         Config['bluetooth']['interface'] = selected

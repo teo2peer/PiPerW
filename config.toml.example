@@ -23,6 +23,11 @@ ask_interface = true
 [pheripherals]
 controllers = ["keyboard"]
 
+
+[bad_usb]
+keyboard = "/dev/hidg0"
+mouse = "/dev/hidg1"
+
 [plugins]
 enabled = true
 folder = "./plugins"

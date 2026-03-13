@@ -1,17 +1,32 @@
-PiPerW/__pycache__/*
-PiPerW/*.pyc
-PiPerW/*.pyo
-PiPerW/*.pyd
-PiPerW/__pycache__/*
+# Ignore compiled Python files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Ignore specific files
 config.toml
 output.log
-*.pyc
 test.py
-config.toml
-PiPerW/tmp/display.png
 
-lib/*
-!lib/README.md
+# Ignore tmp
+tmp/*
 
-apps\PiFM\Play Music\music/*
-!apps\PiFM\Play Music\music/README.md
+# Ignore lib except some files
+PiPerW/lib/*
+!PiPerW/lib/gadget/*
+PiPerW/lib/gadget/functions/*
+!PiPerW/lib/README.md
+
+functions/*
+
+# Ignore logs
+logs/*
+!PiPerW/logs/README.md
+
+# Ignore data
+data/*
+
+# Ignore music except some files
+apps/PiFM/Play_Music/music/*
+!apps/PiFM/Play_Music/music/README.md

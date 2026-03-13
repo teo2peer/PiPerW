@@ -1,3 +1,4 @@
+setuptools
 toml
 coloredlogs
 luma.oled
@@ -8,3 +9,7 @@ colorlog
 keyboard
 adafruit-circuitpython-rgb-display
 qrcode
+smbus
+cc1101
+pn532pi
+numpy
