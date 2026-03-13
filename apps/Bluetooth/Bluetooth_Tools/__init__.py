@@ -173,7 +173,7 @@ class App(AppInterface):
     def scan_services(self):
         if not self.nearby:
             display.text("Scan Classic first!\n\nPress BACK")
-            time.sleep(2)
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
             return
 
         dev_list = [f"{n[:15]}" for a, n in self.nearby]
@@ -186,7 +186,7 @@ class App(AppInterface):
             if k == "down": sm.next()
             if k == "back": return
             if k == "select":
-                idx = sm.selected
+                idx = sm.get_index()
                 break
         
         addr, name = self.nearby[idx]
@@ -196,7 +196,7 @@ class App(AppInterface):
             services = bluetooth.find_service(address=addr)
         except Exception as e:
             display.text(f"Error: {e}")
-            time.sleep(2)
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
             return
 
         if not services:
@@ -216,7 +216,7 @@ class App(AppInterface):
     def pair_device(self):
         if not self.nearby:
             display.text("Scan Classic first!\n\nPress BACK")
-            time.sleep(2)
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
             return
         
         dev_list = [f"{n[:15]}" for a, n in self.nearby]
@@ -229,7 +229,7 @@ class App(AppInterface):
             if k == "down": sm.next()
             if k == "back": return
             if k == "select":
-                idx = sm.selected
+                idx = sm.get_index()
                 break
 
         addr, name = self.nearby[idx]
@@ -245,7 +245,60 @@ class App(AppInterface):
         while not self.is_stopped() and self.wait_for_input() != "back": pass
 
     def send_file(self):
-        display.text("To send files:\nSet up in config\nnot yet native.\nBACK to exit")
+        if not self.nearby:
+            display.text("Scan Classic first!\n\nPress BACK")
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
+            return
+
+        files_dir = os.path.join(self.get_state_dir(), "files")
+        os.makedirs(files_dir, exist_ok=True)
+        
+        files = os.listdir(files_dir)
+        if not files:
+            display.text("No files found in:\nstate/files/\n\nPress BACK")
+            while not self.is_stopped() and self.wait_for_input() != "back": pass
+            return
+
+        fm = Menu(files)
+        file_idx = 0
+        while not self.is_stopped():
+            display.draw(fm.generate())
+            k = self.wait_for_input()
+            if k == "up": fm.previous()
+            if k == "down": fm.next()
+            if k == "back": return
+            if k == "select":
+                file_idx = fm.get_index()
+                break
+                
+        selected_file = files[file_idx]
+        file_path = os.path.join(files_dir, selected_file)
+        
+        dev_list = [f"{n[:15]}" for a, n in self.nearby]
+        sm = Menu(dev_list)
+        idx = 0
+        while not self.is_stopped():
+            display.draw(sm.generate())
+            k = self.wait_for_input()
+            if k == "up": sm.previous()
+            if k == "down": sm.next()
+            if k == "back": return
+            if k == "select":
+                idx = sm.get_index()
+                break
+
+        addr, name = self.nearby[idx]
+        display.text(f"Sending file:\n{selected_file[:10]}\nto {name[:10]}")
+        
+        # Using bt-obex which is part of bluez-tools (already in manifest)
+        res = subprocess.run(["bt-obex", "-p", addr, file_path], capture_output=True, text=True)
+        
+        if res.returncode == 0:
+            display.text("File Sent!\n\nPress BACK")
+        else:
+            Log.error(f"Send failed: {res.stderr}")
+            display.text("Send Failed.\nCheck logs.\nPress BACK")
+            
         while not self.is_stopped() and self.wait_for_input() != "back": pass
 
     def discoverable_mode(self):
@@ -283,7 +336,15 @@ class App(AppInterface):
         display.text("Spoofing MAC...\nRandomizing...")
         res = subprocess.run(["sudo", "spooftooph", "-i", self.interface, "-R"], capture_output=True)
         if res.returncode == 0:
-            display.text("Spoofed!\n\nPress BACK")
+            mac = "Unknown"
+            hciconfig_res = subprocess.run(["hciconfig", self.interface], capture_output=True, text=True)
+            for line in hciconfig_res.stdout.split('\n'):
+                if "BD Address" in line:
+                    parts = line.split()
+                    if len(parts) >= 3:
+                        mac = parts[2]
+                    break
+            display.text(f"Spoofed!\nMAC: {mac}\n\nPress BACK")
         else:
             display.text("Failed.\nIs spooftooph\ninstalled?\nPress BACK")
         while not self.is_stopped() and self.wait_for_input() != "back": pass
@@ -298,4 +359,6 @@ class App(AppInterface):
             display.text("Disabling BT...")
             subprocess.run(["sudo", "rfkill", "block", "bluetooth"])
             subprocess.run(["sudo", "hciconfig", "hci0", "down"])
-        time.sleep(1.5)
+        display.text("Press BACK")
+        while not self.is_stopped() and self.wait_for_input() != "back": pass
+
