@@ -296,6 +296,17 @@ sudo python3 -m pip install --upgrade pip
 sudo python3 -m pip install -r requirements.txt
 
 
+# Ask user to pre-install apps dependencies
+echo -e "${YELLOW}¿Deseas pre-instalar las dependencias de todas las aplicaciones ahora? (Si eliges 'No', se instalaran automaticamente al ejecutar cada app por primera vez) [y/N]${ENDCOLOR}"
+read -r -p "Respuesta: " response
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    echo -e "${BLUE}Pre-instalando dependencias de aplicaciones...${ENDCOLOR}"
+    sudo python3 preinstall_apps_deps.py
+else
+    echo -e "${BLUE}Omitiendo pre-instalacion. Las dependencias se instalaran on-demand.${ENDCOLOR}"
+fi
+
+
 # Indicate that the script execution is complete
 echo -e "${GREEN}Script execution completed.${ENDCOLOR}\n"
 

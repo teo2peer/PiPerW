@@ -41,7 +41,7 @@ def first_run():
         os.system("sudo python3 main.py")
         
     except Exception as e:
-        Log.exception(f"Error running setup script: {e}")
+        Log.error(f"Error running setup script: {e}")
         sys.exit(1)
 
 
@@ -53,7 +53,7 @@ def initialize_display():
     try:
         Display.init()
     except Exception as e:
-        Log.exception(f"Error initializing display driver: {e}")
+        Log.error(f"Error initializing display driver: {e}")
         sys.exit(1)
     return Display
 
@@ -79,7 +79,7 @@ def initialize_peripherals():
     try:
         Pheripheral = importlib.import_module("PiPerW.driver.pheripherals").Pheripherals()
     except Exception as e:
-        Log.exception(f"Error initializing peripherals: {e}")
+        Log.error(f"Error initializing peripherals: {e}")
         sys.exit(1)
 
 def initialize_telemetry():
@@ -208,10 +208,35 @@ def app_finder(folder):
         elif key == "back" or key == "exit":
             break
 
-def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
+def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs, force_reinstall=False, update=False):
     has_installed_something = False
     total_reqs = len(apt_reqs) + len(pip_reqs) + len(git_reqs)
     current_req = 0
+    cache_file = ".cache_install.toml"
+
+    # Load cache
+    try:
+        import toml
+        if os.path.exists(cache_file):
+            with open(cache_file, "r", encoding="utf-8") as f:
+                cache = toml.load(f)
+        else:
+            cache = {"apt": [], "pip": [], "github": []}
+        
+        # Ensure keys exist
+        for key in ["apt", "pip", "github"]:
+            if key not in cache:
+                cache[key] = []
+    except Exception:
+        cache = {"apt": [], "pip": [], "github": []}
+
+    def save_cache():
+        try:
+            import toml
+            with open(cache_file, "w", encoding="utf-8") as f:
+                toml.dump(cache, f)
+        except Exception as e:
+            Log.error(f"Error saving cache: {e}")
 
     def update_progress(msg):
         nonlocal current_req
@@ -221,29 +246,61 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
 
     # Check APT
     for pkg in apt_reqs:
+        if pkg in cache["apt"] and not force_reinstall and not update:
+            update_progress(f"Cached APT:\n{pkg[:15]}")
+            continue
+            
         try:
             result = subprocess.run(['dpkg', '-s', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if result.returncode != 0:
+            if result.returncode != 0 or force_reinstall or update:
                 update_progress(f"Instalando APT:\n{pkg[:15]}")
                 Log.info(f"Installing APT dependency for {app_name}: {pkg}")
-                subprocess.run(['sudo', 'apt-get', 'install', '-y', pkg])
+                
+                cmd = ['sudo', 'apt-get', 'install', '-y', pkg]
+                if force_reinstall:
+                    cmd = ['sudo', 'apt-get', 'install', '--reinstall', '-y', pkg]
+                elif update:
+                    cmd = ['sudo', 'apt-get', 'install', '--only-upgrade', '-y', pkg]
+                    
+                subprocess.run(cmd)
                 has_installed_something = True
+                
+                if pkg not in cache["apt"]:
+                    cache["apt"].append(pkg)
             else:
                 update_progress(f"Check APT: {pkg[:10]}")
+                if pkg not in cache["apt"]:
+                    cache["apt"].append(pkg)
         except FileNotFoundError:
             Log.warning(f"dpkg not found, skipping apt dependency: {pkg}")
 
     # Check PIP
     for pkg in pip_reqs:
+        if pkg in cache["pip"] and not force_reinstall and not update:
+            update_progress(f"Cached PIP:\n{pkg[:15]}")
+            continue
+            
         try:
             result = subprocess.run([sys.executable, '-m', 'pip', 'show', pkg], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if result.returncode != 0:
+            if result.returncode != 0 or force_reinstall or update:
                 update_progress(f"Instalando PIP:\n{pkg[:15]}")
                 Log.info(f"Installing PIP dependency for {app_name}: {pkg}")
-                subprocess.run([sys.executable, '-m', 'pip', 'install', pkg])
+                
+                cmd = [sys.executable, '-m', 'pip', 'install', pkg]
+                if force_reinstall:
+                    cmd = [sys.executable, '-m', 'pip', 'install', '--force-reinstall', pkg]
+                elif update:
+                    cmd = [sys.executable, '-m', 'pip', 'install', '--upgrade', pkg]
+                    
+                subprocess.run(cmd)
                 has_installed_something = True
+                
+                if pkg not in cache["pip"]:
+                    cache["pip"].append(pkg)
             else:
                 update_progress(f"Check PIP: {pkg[:10]}")
+                if pkg not in cache["pip"]:
+                    cache["pip"].append(pkg)
         except FileNotFoundError:
             Log.warning(f"pip not found, skipping pip dependency: {pkg}")
 
@@ -251,17 +308,36 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs):
     for repo_url in git_reqs:
         try:
             repo_name = repo_url.rstrip('/').split('/')[-1].replace('.git', '')
+            if repo_url in cache["github"] and not force_reinstall and not update:
+                update_progress(f"Cached GIT:\n{repo_name[:15]}")
+                continue
+                
             target_path = os.path.join('lib', repo_name)
-            if not os.path.exists(target_path):
+            if not os.path.exists(target_path) or force_reinstall:
                 update_progress(f"Clonando:\n{repo_name[:15]}")
                 Log.info(f"Cloning GIT dependency for {app_name}: {repo_url}")
                 os.makedirs('lib', exist_ok=True)
+                if force_reinstall and os.path.exists(target_path):
+                    import shutil
+                    shutil.rmtree(target_path)
                 subprocess.run(['git', 'clone', repo_url, target_path])
+                has_installed_something = True
+                
+                if repo_url not in cache["github"]:
+                    cache["github"].append(repo_url)
+            elif update:
+                update_progress(f"Update GIT:\n{repo_name[:15]}")
+                Log.info(f"Updating GIT dependency for {app_name}: {repo_url}")
+                subprocess.run(['git', '-C', target_path, 'pull'])
                 has_installed_something = True
             else:
                 update_progress(f"Check GIT: {repo_name[:10]}")
+                if repo_url not in cache["github"]:
+                    cache["github"].append(repo_url)
         except FileNotFoundError:
             Log.warning(f"git not found, skipping git dependency: {repo_url}")
+
+    save_cache()
 
     if has_installed_something:
         Display.progress_bar(60, "Configurando...")
