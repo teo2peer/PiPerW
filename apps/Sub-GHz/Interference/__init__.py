@@ -20,7 +20,7 @@ class App(AppInterface):
         self.description = "Make interefrence in a channe"
         self.author = "Teo2Peer"
         
-        super().__init__(self.name, self.version)
+        super().__init__()
         
         # get this path
         self.path = os.path.dirname(os.path.realpath(__file__)) 

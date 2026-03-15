@@ -2,7 +2,7 @@
 
 
 class AppInterface:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         import os
         import sys
         

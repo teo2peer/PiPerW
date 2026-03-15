@@ -17,7 +17,7 @@ class App(AppInterface):
         self.version = "1.5"
         self.description = "Professional Sub-GHz Receiver and Decoder"
         self.author = "Copilot"
-        super().__init__(self.name, self.version)
+        super().__init__()
         self.cc1101 = None
         self.frequency = 433.92
 

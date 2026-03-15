@@ -16,7 +16,7 @@ class App(AppInterface):
     version = "0.1"
     
     def __init__(self):
-        super().__init__(self.name, self.version)
+        super().__init__()
         
         self.bpm = 120
         self.beat = 4

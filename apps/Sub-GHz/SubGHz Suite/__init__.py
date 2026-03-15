@@ -19,7 +19,7 @@ class App(AppInterface):
         self.version = "2.0"
         self.description = "Professional All-In-One Sub-GHz Tool"
         self.author = "Teo2Peer"
-        super().__init__(self.name, self.version)
+        super().__init__()
         
         self.cc1101 = None
         self.frequency = 433.92

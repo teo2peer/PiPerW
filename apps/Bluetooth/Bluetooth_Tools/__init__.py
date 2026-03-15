@@ -17,7 +17,7 @@ class App(AppInterface):
     version = "1.0"
 
     def __init__(self):
-        super().__init__(self.name, self.version)
+        super().__init__()
         self.menu = None
         self.nearby = []
         self.interface = "hci0"
