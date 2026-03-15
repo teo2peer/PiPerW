@@ -24,7 +24,7 @@ class Driver(DisplayInterface):
         
     
     def init(self):
-        print("Initializing OnlyWeb display")
+        Log.info("Initializing OnlyWeb display")
     
     def reset(self):
         pass
