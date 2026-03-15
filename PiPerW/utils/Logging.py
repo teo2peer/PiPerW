@@ -83,11 +83,18 @@ class Logging(metaclass=Singleton):
         :param file: str: File name
         :param function: str: Function name
         '''
-        
-        file = file.replace(self.relative_path, '')[1:]
+        if self.relative_path and file.startswith(self.relative_path):
+            file = file[len(self.relative_path):]
+            if file.startswith('/') or file.startswith('\\'):
+                file = file[1:]
+        elif file.startswith(sys.path[0]): # Backup for main.py dir
+            file = file[len(sys.path[0]):]
+            if file.startswith('/') or file.startswith('\\'):
+                file = file[1:]
+            
         self.extra_log['file'] = file
         self.extra_log['function'] = function
-        
+
     def info(self, message):
         '''
         Log an info message
@@ -109,35 +116,35 @@ class Logging(metaclass=Singleton):
     def warning(self, message):
         '''
         Log a warning message
-        
+
         :param message: str: Message to log
         '''
+        self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
         self.logger.warning(message)
-    
+
     def error(self, message):
         '''
         Log an error message
-        
+
         :param message: str: Message to log
         '''
+        self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
         self.logger.error(message)
-    
+
     def critical(self, message):
         '''
         Log a critical message
-        
+
         :param message: str: Message to log
         '''
+        self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
         self.logger.critical(message)
-    
+
     def exception(self, message):
         '''
         Log an exception message
-        
+
         :param message: str: Message to log
         '''
-        self.logger.exception(message)
-        
-
-# Export the Logging class
+        self.update_data(inspect.stack()[1][1], inspect.stack()[1][3])
 Logging = Logging

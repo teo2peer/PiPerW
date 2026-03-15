@@ -89,7 +89,6 @@ class Menu:
         
         # Calculate the text position based on whether there's an icon
         text_x = icon_offset_x + (icon_size + 4 if icon else 0)  # Initial offset for the text
-        print(text_x)
         
         # Calculate text height for vertical centering
         text_bbox = self.font.getbbox(text)  # Measure the text, not the draw object
