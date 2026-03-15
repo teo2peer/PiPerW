@@ -10,7 +10,7 @@ from random import randint, gauss
 
 import jinja2
 from .keys import * 
-from PiPerW.helpers import Config
+from PiPerW.helpers import Config, Log
 import select
 
 class DuckyScriptInterpreter():
@@ -69,7 +69,7 @@ class DuckyScriptInterpreter():
         template = jinja2.Template('\n'.join(self.fileData))
         output = template.render(os.environ).split("\n")
 
-        print(output)
+        Log.debug(output)
 
         for ln in output:
             index += 1
@@ -77,7 +77,7 @@ class DuckyScriptInterpreter():
             if len(ln) == 0: continue
             if ln[0] == "#": continue
 
-            print("{}: {}".format(index, ln))
+            Log.debug("{}: {}".format(index, ln))
 
             base, line = ln.split(" ", 1)
             if base in self.key:
@@ -114,8 +114,8 @@ class DuckyScriptInterpreter():
                         break
                     val += x
 
-                print("-" * 20 + val)
-                print(os.environ.get(val, ""))
+                Log.debug("-" * 20 + val)
+                Log.debug(os.environ.get(val, ""))
 
                 ln = ln.replace("![${}]".format(val), os.environ.get(val, ""))
 
@@ -366,7 +366,6 @@ class BadUSB:
         write exact given arg directly to hid serial
         """
 
-        #print(type(direct.encode()))
 
         with open(self.mouseHidDirectory, "wb+") as mouse:
             if not useAdditives:
@@ -405,14 +404,14 @@ class BadUSB:
 
         # anything past 128 makes it go back
         if xPx < 0:
-            print("x axis negative")
+            Log.debug("x axis negative")
             xPx = xPx*-1 + 127
         
         if yPx < 0:
-            print("y axis negative")
+            Log.debug("y axis negative")
             yPx = yPx*-1 + 127
         
-        print("{}, {}".format(xPx, yPx))
+        Log.debug("{}, {}".format(xPx, yPx))
 
         # TODO: make it -254 from the actual value instead of just doing 254
 
@@ -423,7 +422,7 @@ class BadUSB:
         if yPx > 254:
             b = yPx
             for x in range(round(yPx/254)):
-                print('a')
+                Log.debug('a')
                 chars.append((0, 254))
         if yPx < 254 and xPx < 254:
             chars.append((xPx, yPx))
@@ -446,9 +445,9 @@ class BadUSB:
             else:
                 hexiY = hex(y)[2:]
 
-            print("-" * 10)
-            print(hexiX)
-            print(hexiY)
+            Log.debug("-" * 10)
+            Log.debug(hexiX)
+            Log.debug(hexiY)
 
             self.mouseRawWrite(b'\x00'+ eval('b"' + r'\x' + hexiX + '"') + eval('b"' + r'\x' + hexiY + '"'), useAdditives=False)
 
@@ -493,21 +492,16 @@ class BadUSB:
                 except:
                     raise
 
-        #print("{}: {}".format(key, keyInt))
 
         if type(keyInt) == list: # special shifted char
-            #print("is list")
             text = chr(self.keys["LSHIFT"]) + self.keys["null"] + chr(keyInt[0])+self.keys["null"]*5
             self.kbRawWrite(text.encode())
         else:
             if not key == key.upper(): # if lowercase
-                #print("is lower")
                 self.kbRawWrite(keyInt, useAdditives=True)
             elif key in list(self.symbols):
-                #print("is special")
                 self.kbRawWrite(keyInt, useAdditives=True)
             else: # if uppercase
-                #print("is upper")
                 text = chr(self.keys["LSHIFT"]) + self.keys["null"] + chr(keyInt)+self.keys["null"]*5
                 self.kbRawWrite(text.encode())
 
@@ -531,7 +525,6 @@ class BadUSB:
                 except:
                     raise
 
-        #print("{}: {}".format(key, keyInt))
 
         if type(keyInt) == list: # special shifted char
             pass # no
@@ -566,7 +559,6 @@ class BadUSB:
                 except:
                     raise
 
-        #print("{}: {}".format(key, keyInt))
 
         if type(keyInt) == list: # special shifted char
             pass # no
@@ -601,7 +593,6 @@ class BadUSB:
                 except:
                     raise
 
-        #print("{}: {}".format(key, keyInt))
 
         if type(keyInt) == list: # special shifted char
             pass # no
@@ -636,7 +627,6 @@ class BadUSB:
                 except:
                     raise
 
-        #print("{}: {}".format(key, keyInt))
 
         if type(keyInt) == list: # special shifted char
             pass # no

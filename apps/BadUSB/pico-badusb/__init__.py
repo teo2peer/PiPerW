@@ -16,7 +16,7 @@ class App(AppInterface):
     
     # Loads and executes commands from the payload
     def __init__(self):
-        super().__init__("BadUSB Pico", "1.0")
+        super().__init__()
         self.usb = BadUSB()
 
     
