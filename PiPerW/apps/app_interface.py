@@ -2,10 +2,38 @@
 
 
 class AppInterface:
-    def __init__(self, name, version):
+    def __init__(self):
         import os
-        self.name = name
-        self.version = version
+        import sys
+        
+        try:
+            import tomllib
+        except ImportError:
+            try:
+                import tomli as tomllib
+            except ImportError:
+                import toml as tomllib
+                
+        # Dynamically determine the app's directory by looking at the child class's module
+        module_name = self.__class__.__module__
+        module_file = sys.modules[module_name].__file__
+        app_dir = os.path.dirname(module_file)
+        
+        manifest_path = os.path.join(app_dir, "manifest.toml")
+        
+        if os.path.exists(manifest_path):
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            try:
+                manifest = tomllib.loads(content)
+            except AttributeError:
+                manifest = tomllib.load(manifest_path)
+            self.name = manifest.get("name", "Unknown App")
+            self.version = manifest.get("version", "0.0")
+        else:
+            self.name = "Unknown App"
+            self.version = "0.0"
+            
         self._thread = None # Reference to the WThread running this app
         self._state_dir = os.path.join("data", self.name.replace(" ", "_").lower())
         os.makedirs(self._state_dir, exist_ok=True)
