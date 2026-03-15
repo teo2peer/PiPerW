@@ -78,7 +78,6 @@ class DisplayInterface(metaclass=Singleton):
     # DO NOT MODIFY
     def draw(self, image):
         with self.lock:
-            print("Drawing image")
             # check if image is a buffer, pillow or normal image
             if type(image) == np.ndarray:
                 image = Image.fromarray(image)
