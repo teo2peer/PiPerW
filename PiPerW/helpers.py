@@ -3,7 +3,7 @@ import os
 import sys
 import inspect
 import threading
-from PiPerW.utils.Logging import Logging
+from PiPerW.helpers import Log
 
 
 
@@ -82,9 +82,9 @@ class Selector:
         :return: str: Selected option
         '''
         
-        print(f"\n{BCOLORS.OKCYAN}{self.message}{BCOLORS.ENDC}")
+        Log.info(f"\n{BCOLORS.OKCYAN}{self.message}{BCOLORS.ENDC}")
         for i, option in enumerate(self.options):
-            print(f"{BCOLORS.OKGREEN}{i+1}{BCOLORS.ENDC}. {option}")
+            Log.info(f"{BCOLORS.OKGREEN}{i+1}{BCOLORS.ENDC}. {option}")
         
         while True:
             try:
@@ -92,9 +92,9 @@ class Selector:
                 if choice > 0 and choice <= len(self.options):
                     return self.options[choice-1]
                 else:
-                    print("Invalid option")
+                    Log.error("Invalid option")
             except ValueError:
-                print("Invalid option")
+                Log.error("Invalid option")
 
 #---------------------------
 # Custom trheading class for exception handling
@@ -229,5 +229,7 @@ def save_config():
 #---------------------------
 #     Logging
 #---------------------------
-Log = Logging(Config['general']['debug'], os.path.dirname(os.path.abspath(__file__)))
+# Get the parent directory of this file as the root path (the main PiPerW dir)
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+Log = Logging(Config['general']['debug'], root_dir)
 Log.info("Helpers loaded")
