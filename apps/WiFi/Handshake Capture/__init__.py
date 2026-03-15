@@ -38,9 +38,23 @@ class App(AppInterface):
             if Config['network']['interface'] in iwconfig_res.stdout and "Monitor" in iwconfig_res.stdout:
                 self.mon_interface = Config['network']['interface']
             else:
-                display.text("Error enabling\nmonitor mode")
-                self.wait_for_input()
-                return
+                display.text("Monitor mode err\nContinue anyway?")
+                time.sleep(1)
+                from PiPerW.utils.Menu import Menu
+                menu = Menu(["Exit", "Continue"])
+                cont = False
+                while not self.is_stopped():
+                    menu.show()
+                    k = pheripherals.await_key()
+                    if k is None or self.is_stopped() or k in ["back", "exit"]: return
+                    if k == "up": menu.previous()
+                    elif k == "down": menu.next()
+                    elif k == "select":
+                        if menu.index == 1:
+                            cont = True
+                        break
+                if not cont:
+                    return
 
         display.text("Scanning APs...\n\n[Press any key \nto stop]")
 
