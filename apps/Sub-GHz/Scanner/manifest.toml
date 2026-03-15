@@ -1,0 +1,10 @@
+[app]
+name = "Sub-GHz Scanner"
+version = "1.0"
+description = "Professional Sub-GHz scanner and visualizer using CC1101"
+author = "Copilot"
+
+[requirements]
+apt = []
+pip = []
+github = []
