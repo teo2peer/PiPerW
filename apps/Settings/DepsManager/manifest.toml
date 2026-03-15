@@ -1,0 +1,9 @@
+[app]
+name = "Dependency manager"
+version = "1.0"
+description = "Update or reinstall dependencies for all apps"
+
+[requirements]
+apt = []
+pip = ["toml"]
+github = []
