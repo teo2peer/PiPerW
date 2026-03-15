@@ -3,7 +3,7 @@ import os
 import sys
 import inspect
 import threading
-
+from PiPerW.utils.Logging import Logging
 
 
 class BCOLORS:
