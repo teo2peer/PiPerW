@@ -78,9 +78,7 @@ class App(AppInterface):
         self.executable = self.root_path +'/'+ self.lib_path + "/src/pi_fm_rds"
         self.frequency = 100.0
         
-        print("Executable: ", self.executable)
-
-        
+        Log.info(f"Executable: {self.executable}")
     
     def fix_makefile_pi_zerow(self):
         '''
