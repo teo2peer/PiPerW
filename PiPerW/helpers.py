@@ -3,7 +3,6 @@ import os
 import sys
 import inspect
 import threading
-from PiPerW.helpers import Log
 
 
 
