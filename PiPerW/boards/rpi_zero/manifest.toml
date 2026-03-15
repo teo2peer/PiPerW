@@ -1,0 +1,39 @@
+[board]
+name = "Raspberry Pi Zero W"
+version = "1.1"
+description = "Abstract hardware mapping for Raspberry Pi Zero W"
+author = "Teo2Peer"
+
+[pins]
+# ----- SPECIAL PINS (Abstract naming -> Real BCM integer) -----
+I2C_SDA = 2
+I2C_SCL = 3
+
+SPI_MOSI = 10
+SPI_MISO = 9
+SPI_SCLK = 11
+SPI_CE0 = 8
+SPI_CE1 = 7
+
+UART_TX = 14
+UART_RX = 15
+
+# ----- FREE GPIOS (Abstract naming from 0 to N -> Real BCM integer) -----
+# Map purely free (non-special) pins so apps just request "GPIO0", "GPIO1"...
+GPIO0 = 4    # BCM 4
+GPIO1 = 5    # BCM 5
+GPIO2 = 6    # BCM 6
+GPIO3 = 12   # BCM 12
+GPIO4 = 13   # BCM 13
+GPIO5 = 16   # BCM 16
+GPIO6 = 17   # BCM 17
+GPIO7 = 18   # BCM 18
+GPIO8 = 19   # BCM 19
+GPIO9 = 20   # BCM 20
+GPIO10 = 21  # BCM 21
+GPIO11 = 22  # BCM 22
+GPIO12 = 23  # BCM 23
+GPIO13 = 24  # BCM 24
+GPIO14 = 25  # BCM 25
+GPIO15 = 26  # BCM 26
+GPIO16 = 27  # BCM 27
