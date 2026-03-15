@@ -1,0 +1,9 @@
+[app]
+name = "Beacon Flooder"
+version = "1.0"
+description = "Spam fake AP beacons to confuse nearby devices"
+
+[requirements]
+apt = ["mdk4", "aircrack-ng"]
+pip = []
+github = []

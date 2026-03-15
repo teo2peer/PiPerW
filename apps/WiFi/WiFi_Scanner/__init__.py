@@ -1,4 +1,4 @@
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log
@@ -29,6 +29,8 @@ class App(AppInterface):
             while True:
                 menu.show()
                 key = pheripherals.await_key()
+                if key is None or self.is_stopped():
+                    return
                 
                 if key == "up":
                     menu.previous()
@@ -47,7 +49,7 @@ class App(AppInterface):
         found = []
         try:
             # Try nmcli (NetworkManager) first as it provides clean outputs
-            out = subprocess.check_output(["nmcli", "-t", "-f", "SSID,SIGNAL", "dev", "wifi"], stderr=subprocess.DEVNULL)
+            out = subprocess.check_output(["nmcli", "-t", "-f", "SSID,SIGNAL", "dev", "wifi"], stderr=subprocess.DEVNULL, timeout=10)
             lines = out.decode('utf-8', errors='ignore').split('\n')
             for line in lines:
                 if ":" in line:
@@ -58,7 +60,7 @@ class App(AppInterface):
             Log.error(f"nmcli scan failed: {e}")
             try:
                 # Fallback to pure iw scan for standard Raspberry Pi environments
-                out = subprocess.check_output(["sudo", "iw", "dev", "wlan0", "scan"], stderr=subprocess.DEVNULL)
+                out = subprocess.check_output(["sudo", "iw", "dev", "wlan0", "scan"], stderr=subprocess.DEVNULL, timeout=10)
                 lines = out.decode('utf-8', errors='ignore').split('\n')
                 current_ssid = ""
                 for line in lines:

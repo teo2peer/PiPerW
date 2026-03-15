@@ -7,10 +7,10 @@
 # disconnect all clients
 # sudo aireplay-ng --deauth 0 -a BSSID wlan0mon
 
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
-from PiPerW.helpers import Log
+from PiPerW.helpers import Log, Config
 import os, time
 
 display = Display()
@@ -19,30 +19,26 @@ pheripherals = Pheripherals()
 
 
 class App(AppInterface):
-    
-    name = "Wifi Jammer"
-    version = "0.1"
-    
+
     def __init__(self):
-        super().__init__(self.name, self.version)
+        super().__init__()
         self.menu = None
-        
+
     def init(self):
         Log.warning("Disabling Monitor Mode")
         display.text("Disabling Monitor Mode")
         time.sleep(1)
-        
+
         import subprocess
-        result = subprocess.run(["sudo", "airmon-ng", "stop", "wlan0mon"], capture_output=True, text=True)
+        result = subprocess.run(["sudo", "airmon-ng", "stop", f"{Config['network']['interface']}mon"], capture_output=True, text=True)
         if result.returncode != 0:
-            Log.error(f"Failed to stop monitor mode: {result.stderr}")
-            display.text("Error stopping mode")
-        else:    
-            Log.info("Monitor mode disabled")
-            display.text("Monitor mode disabled")
+            result = subprocess.run(["sudo", "airmon-ng", "stop", Config['network']['interface']], capture_output=True, text=True)
+        
+        subprocess.run(["sudo", "service", "NetworkManager", "start"])
+        subprocess.run(["sudo", "ifconfig", Config['network']['interface'], "up"])
 
-        self.wait_for_input()
-
+        Log.info("Monitor mode disabled")
+        display.text("Monitor mode \ndisabled\n\n[Press any key]")
 
 
 

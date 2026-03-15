@@ -1,0 +1,9 @@
+[app]
+name = "Handshake Grab"
+version = "1.0"
+description = "Captures a WPA Handshake from a specific AP and saves to PCAP"
+
+[requirements]
+apt = ["aircrack-ng"]
+pip = []
+github = []

