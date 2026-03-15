@@ -1,0 +1,10 @@
+[app]
+name = "Sub-GHz Receiver"
+version = "1.0"
+description = "Professional Sub-GHz Receiver and Decoder"
+author = "Copilot"
+
+[requirements]
+apt = []
+pip = []
+github = []
