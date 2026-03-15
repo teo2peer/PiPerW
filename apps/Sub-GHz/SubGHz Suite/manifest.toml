@@ -1,0 +1,10 @@
+[app]
+name = "SubGHz Suite"
+version = "2.0"
+description = "Herramienta profesional Sub-GHz. Incluye Analizador de Frecuencia de barrido rápido, Lectura de paquetes (Read RAW) integrados en una misma UI."
+author = "Copilot"
+
+[requirements]
+apt = []
+pip = ["Pillow"]
+github = []
