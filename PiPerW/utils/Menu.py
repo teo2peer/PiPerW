@@ -63,7 +63,6 @@ class Menu:
         
         Log.info("Creating menu items")
         for i in range(len(self.texts)):
-            Log.info(f"Creating item {i}")
             self.items.append(self.create_item(self.texts[i], self.icons[i] if self.icons else None))
         
         Log.info("Menu initialized")

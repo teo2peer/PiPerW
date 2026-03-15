@@ -118,25 +118,40 @@ class App(AppInterface):
                         self.run_command(['git', 'clone', repo_url, target_path], "Clone " + msg)
 
     def run(self):
-        while not self.is_stopped():
-            options = [
-                "Update PIP", 
-                "Update APT", 
-                "Update GitHub", 
-                "Update All", 
-                "Reinstall All", 
-                "Scan all Manifests", 
-                "Clear Cache", 
-                "Exit"
-            ]
-            menu = Menu(options, "Dependency Mgr")
-            selected = menu.select()
-            
-            if selected is None or selected == len(options) - 1:
-                break
-                
-            cache = self.load_cache()
+        options = [
+            "Update PIP",
+            "Update APT",
+            "Update GitHub",
+            "Update All",
+            "Reinstall All",
+            "Scan all Manifests",
+            "Clear Cache",
+            "Exit"
+        ]
+        menu = Menu(options)
 
+        while not self.is_stopped():
+            menu.show()
+            key = pheripherals.await_key()
+
+            if key is None or self.is_stopped():
+                break
+
+            if key == "up":
+                menu.previous()
+                continue
+            elif key == "down":
+                menu.next()
+                continue
+            elif key in ["back", "exit"]:
+                break
+            elif key == "select":
+                selected = menu.index
+
+                if selected == len(options) - 1:
+                    break
+
+                cache = self.load_cache()
             if selected == 0:
                 self.do_action("update_pip", cache)
             elif selected == 1:

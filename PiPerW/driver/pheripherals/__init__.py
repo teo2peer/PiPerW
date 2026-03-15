@@ -17,6 +17,7 @@ class Pheripherals(metaclass=Singleton):
         self.timestamp = 0
         self.force_app_kill = False # Dead Man's Switch flag
         self.suppress_exit = False  # When True, EXIT key is ignored (apps should be killed via long-press only)
+        self.debug_keys = False
         
         # Load controllers from config or use default keyboard
         if Config['pheripherals'].get('controllers'):
@@ -109,7 +110,9 @@ class Pheripherals(metaclass=Singleton):
                     self.key = key
                     self.timestamp = timestamp
                     last_controller = controller
-                    Log.info("Key: {}".format(self.key))
+                    
+                    if self.debug_keys:
+                        Log.info("Key: {}".format(self.key))
                     
         
             # check if is long press
