@@ -1,0 +1,14 @@
+# Directorio: utils/
+
+Este directorio proporciona las "herramientas e inyecciones" compartidas tanto por los subsistemas de bajo nivel (\`driver\`, \`main\`) como por todos los desarrolladores de \`apps/\`. Previene que cada creador de aplicaciones tenga que reinventar la rueda por su cuenta.
+
+### Elementos Gráficos
+- **`Menu.py`**: El fabuloso motor asíncrono de renderizado de UI de listas. Al pasarle un array nativo en Python ej: `opciones = ["a", "b"]`, este módulo gestiona autónomamente cosas tan complejas como el encolado (queueing), las matemáticas detrás del scroll si un menú excede de los píxeles de pantalla disponibles según la fuente, el auto-resaltado de selección con cuadros invertidos, y la compresión/posicionamiento de cualquier imagen vinculable a un icono mediante el uso de `Pillow (PIL)`.
+
+### Observabilidad y Prevención de errores
+- **`Logging.py`**: Interceptor Singleton avanzado (patrón instanciado de creación única). Permite emitir mensajes estandarizados estilo `DEBUG`, `INFO` o `ERROR` formatedos con colores ANSI en la terminal, lo cual ayuda inmensamente en el desarrollo en PC. No obstante, al arrancar en el entorno real (donde es *headless* y la terminal se pierde), escribe esta misma información rotativamente hacia `.log` ubicados en el `dir/logs/` colindante al root, lo que permite a las herramientas auditar _por qué diablos no encendió una red de Wi-Fi_ luego de tener que reiniciar forzadamente el dispositivo.
+- **`resilience.py` / `telemetry.py`**: Motores incipientes que previenen la congelación total del sistema. Incluyen rutinas para inyectar un pulso sobre procesos en la CPU (supervisión a nivel de sistema operativo de RAM restante, almacenamiento, temperaturas del SoC con peligro de thermal throttling, etc.).
+
+### Arquitectura Core
+- **`Singleton.py`**: Una clase de Meta-nivel de Python (`metaclass=Singleton`). Es usada exhaustivamente en el Firmware principal (por el `Display` y otros manejadores de buses `SPI`/`I2C`). Forzar que algo sea _Singleton_ asegura que todo módulo posterior que intente re-instanciar un "Display", terminará recibiendo amablemente una referencia en la memoria RAM hacia el mismo objeto matriz que instanció `main.py` tiempo atrás. Eludir este patrón provocaría severas colisiones en el kernel de los drivers, de-sincronizaciones físicas en la placa y errores lógicos desastrosos en tiempo de ejecución de hilos paralelos.
+- **`Web/`**: Subservidor local asíncrono. Basado en *Flask/Werkzeug* que renderiza y sirve plantillas web con HTML y websockets. Empleado por el emulador maestro (`only_web` subdriver) para dibujar la pantalla falsa en el browser del programador mientras crea una aplicación mediante el control del DOM.
