@@ -1,0 +1,9 @@
+[app]
+name = "IR Tools"
+version = "1.0"
+description = "Herramientas básicas para interactuar con señales Infrarrojas (IR)."
+author = "PiPerW"
+category = "IR"
+
+[requirments]
+github = [https://github.com/probonopd/irdb]
