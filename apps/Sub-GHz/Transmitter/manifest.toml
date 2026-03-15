@@ -1,0 +1,10 @@
+[app]
+name = "Sub-GHz Transmitter"
+version = "1.0"
+description = "Professional Sub-GHz Transmitter with Frequency Selector"
+author = "Copilot"
+
+[requirements]
+apt = []
+pip = []
+github = []
