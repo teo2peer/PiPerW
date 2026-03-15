@@ -434,13 +434,8 @@ def execute_app(app, folder):
         else:
             on_exit_base = importlib.import_module(on_exit_module_name)
             
-        on_exit = on_exit_base.Execute()
-        
-        # Catch internal crashes inside __on_exit__ so it doesn't break Menu
         try:
-            # Execute the cleanup routine within a monitored thread 
-            # to avoid stuck While True loops
-            cleanup_thread = WThread(target=on_exit.__init__)
+            cleanup_thread = WThread(target=on_exit_base.Execute)
             cleanup_thread.start()
             cleanup_thread.join(timeout=3.0) # Abort drastically after 3 seconds timeout
             
