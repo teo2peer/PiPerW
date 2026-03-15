@@ -416,7 +416,7 @@ def execute_app(app, folder):
             raise t.exc
 
     except Exception as e:
-        Log.exception(f"App crashed\n{app}: {e}")
+        Log.error(f"App crashed\n{app}: {e}")
         Display.text(f"Error running app\n{app}\n\nLog in output.log\n\nPress any key to continue")
         Pheripheral.await_any_key_press()
     finally:
@@ -470,5 +470,5 @@ if __name__ == "__main__":
         
         sys.exit(0)
     except Exception as e:
-        Log.exception(f"Error initializing PiPerW: {e}")
+        Log.error(f"Error initializing PiPerW: {e}")
         sys.exit(1)
