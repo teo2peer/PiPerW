@@ -21,15 +21,24 @@ if [[ $EUID -ne 0 ]]; then
     error "This script must be run as root. Try: sudo ./install.sh"
 fi
 
+# Check if running on a Raspberry Pi
+IS_RPI=false
+if grep -qE "(Raspberry Pi|BCM|Bcm)" /proc/cpuinfo 2>/dev/null; then
+    IS_RPI=true
+fi
+
 info "Welcome to PiPerW Installer"
 
 info "Updating package lists..."
 apt-get update -y
 
 info "Installing kernel headers..."
-apt-get install -y linux-headers-rpi-v7 linux-headers-rpi-v7l || warning "Could not install all kernel headers. Continuing anyway..."
+if [ "$IS_RPI" = true ]; then
+    apt-get install -y linux-headers-rpi-v7 linux-headers-rpi-v7l || warning "Could not install all kernel headers. Continuing anyway..."
+fi
 
 info "Installing core APT dependencies..."
+apt-get install -y build-essential dkms bc
 apt-get install -y python3 python3-dev python3-pip python3-virtualenv python3-venv python3-bluez python3-toml
 apt-get install -y ifstat libffi-dev libssl-dev direnv ondir virtualenv util-linux-extra
 apt-get install -y libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libopenjp2-7 i2c-tools fonts-dejavu bluez libgfortran5 libopenblas0-pthread
@@ -61,14 +70,24 @@ systemctl set-default multi-user.target > /dev/null 2>&1 || true
 #---------------------------
 #     Hardware Interfaces
 #---------------------------
-info "Enabling SPI, I2C, and Serial via raspi-config..."
-if command -v raspi-config > /dev/null; then
-    raspi-config nonint do_spi 0
-    raspi-config nonint do_i2c 0
-    raspi-config nonint do_serial 0
-    success "Hardware interfaces enabled."
+if [ "$IS_RPI" = true ]; then
+    info "Enabling SPI, I2C, and Serial directly via /boot/config.txt (Kali friendly)..."
+    CONFIG_FILE="/boot/config.txt"
+    
+    if [ -f "$CONFIG_FILE" ]; then
+        # I2C
+        grep -q "^dtparam=i2c_arm=on" $CONFIG_FILE || echo "dtparam=i2c_arm=on" >> $CONFIG_FILE
+        # SPI
+        grep -q "^dtparam=spi=on" $CONFIG_FILE || echo "dtparam=spi=on" >> $CONFIG_FILE
+        # UART / Serial
+        grep -q "^enable_uart=1" $CONFIG_FILE || echo "enable_uart=1" >> $CONFIG_FILE
+        
+        success "Hardware interfaces (SPI, I2C, UART) enabled."
+    else
+        warning "$CONFIG_FILE not found. Cannot enable hardware interfaces automatically."
+    fi
 else
-    warning "raspi-config not found. Are you on a Raspberry Pi? Skipping..."
+    info "Not running on a Raspberry Pi, skipping hardware interface config."
 fi
 
 #---------------------------
@@ -91,21 +110,29 @@ fi
 #---------------------------
 #     Hardware Clock (RTC)
 #---------------------------
-info "Configuring Hardware Clock Modules (DS1307)..."
-for mod in i2c-bcm2708 i2c-dev rtc-ds1307; do
-    if ! grep -q "^$mod$" /etc/modules; then
-        echo "$mod" >> /etc/modules
+if [ "$IS_RPI" = true ]; then
+    info "Configuring Hardware Clock Modules (DS1307)..."
+    for mod in i2c-bcm2708 i2c-dev rtc-ds1307; do
+        if ! grep -q "^$mod$" /etc/modules 2>/dev/null; then
+            echo "$mod" >> /etc/modules
+        fi
+    done
+
+    if [ -f /etc/rc.local ]; then
+        if ! grep -q "ds1307" /etc/rc.local; then
+            sed -i -e "$i \echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device\n" /etc/rc.local
+        fi
+
+        if ! grep -q "hwclock -s" /etc/rc.local; then
+            sed -i -e "$i \hwclock -s\n" /etc/rc.local
+        fi
+        success "RTC Clock persistence injected into rc.local"
+    else
+        warning "/etc/rc.local not found. Skipping RTC rc.local injection."
     fi
-done
-
-if ! grep -q "ds1307" /etc/rc.local; then
-    sed -i -e "$i \echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device\n" /etc/rc.local
+else
+    info "Not running on a Raspberry Pi, skipping RTC modules."
 fi
-
-if ! grep -q "hwclock -s" /etc/rc.local; then
-    sed -i -e "$i \hwclock -s\n" /etc/rc.local
-fi
-success "RTC Clock persistence injected."
 
 #---------------------------
 #     Storage & Gadget
@@ -120,22 +147,26 @@ else
 fi
 
 info "Configuring USB OTG Gadget Engine..."
-if [ -f /boot/config.txt ]; then
-    if ! grep -q "dtoverlay=dwc2" /boot/config.txt; then
-        echo "dtoverlay=dwc2" >> /boot/config.txt
+if [ "$IS_RPI" = true ]; then
+    if [ -f /boot/config.txt ]; then
+        if ! grep -q "dtoverlay=dwc2" /boot/config.txt; then
+            echo "dtoverlay=dwc2" >> /boot/config.txt
+        fi
     fi
-fi
-for mod in dwc2 libcomposite; do
-    if ! grep -q "^$mod$" /etc/modules; then
-        echo "$mod" >> /etc/modules
-    fi
-done
-chmod +x ./PiPerW/lib/gadget/hid_script || true
+    for mod in dwc2 libcomposite; do
+        if ! grep -q "^$mod$" /etc/modules 2>/dev/null; then
+            echo "$mod" >> /etc/modules
+        fi
+    done
+    chmod +x ./PiPerW/lib/gadget/hid_script || true
 
-if ! grep -q "hid_script" /etc/crontab; then
-    echo "@reboot root $(pwd)/PiPerW/lib/gadget/hid_script" >> /etc/crontab
+    if ! grep -q "hid_script" /etc/crontab; then
+        echo "@reboot root $(pwd)/PiPerW/lib/gadget/hid_script" >> /etc/crontab
+    fi
+    success "USB Gadget configured in system crontab."
+else
+    info "Not running on a Raspberry Pi, skipping USB OTG Gadget Engine setup."
 fi
-success "USB Gadget configured in system crontab."
 
 #---------------------------
 #     Python Env settings
