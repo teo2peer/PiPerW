@@ -1,0 +1,10 @@
+[app]
+name = "Password Generator"
+version = "1.0"
+description = "Generate robust and cryptographically secure passwords on the go"
+author = "Copilot"
+
+[requirements]
+apt = []
+pip = []
+github = []
