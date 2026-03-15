@@ -1,0 +1,10 @@
+[app]
+name = "System Monitor"
+version = "1.0"
+description = "Professional HUD to monitor CPU, RAM, Disk and Temperature"
+author = "Copilot"
+
+[requirements]
+apt = []
+pip = ["psutil"]
+github = []
