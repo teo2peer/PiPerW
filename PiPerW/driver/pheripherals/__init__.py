@@ -109,7 +109,7 @@ class Pheripherals(metaclass=Singleton):
                     self.key = key
                     self.timestamp = timestamp
                     last_controller = controller
-                    print("Key: {}".format(self.key))
+                    Log.info("Key: {}".format(self.key))
                     
         
             # check if is long press
