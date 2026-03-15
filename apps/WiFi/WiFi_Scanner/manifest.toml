@@ -1,0 +1,10 @@
+[app]
+name = "WiFi Discover Scanner"
+version = "1.0"
+description = "Scan nearby WiFi Access Points and map their signal strength"
+author = "Copilot"
+
+[requirements]
+apt = ["network-manager"]
+pip = []
+github = []
