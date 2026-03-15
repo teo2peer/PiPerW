@@ -41,7 +41,7 @@ def install():
         #     Display driver
         #---------------------------
         Log.info("Searching for display drivers")
-        display_dir = DirFilter("PiPerW/display")
+        display_dir = DirFilter("PiPerW/driver/display")
         Log.info("Display drivers found: {}".format(display_dir.dirs()))
         
         selector = Selector(display_dir.dirs(), "Select a display driver")
