@@ -88,11 +88,7 @@ class App(AppInterface):
     
         
         
-        print("Executable: ", self.executable_root)
-
-        
-        
-    def run(self):
+        Log.info(f"Executable: {self.executable_root}")
         
         
         
