@@ -9,6 +9,8 @@ config.toml
 output.log
 test.py
 
+.claude/
+
 # Ignore tmp
 tmp/*
 

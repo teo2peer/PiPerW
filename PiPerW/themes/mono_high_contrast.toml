@@ -1,0 +1,18 @@
+[theme]
+name = "mono_high_contrast"
+description = "Pure 1-bit monochrome theme. Cheapest framebuffer on Pi Zero."
+
+[colors]
+bg = "#000000"
+fg = "#ffffff"
+accent = "#ffffff"
+muted = "#ffffff"
+
+[fonts]
+default = "default"
+size = 10
+
+[layout]
+frame = "block"
+padding = 1
+scrollbar = true

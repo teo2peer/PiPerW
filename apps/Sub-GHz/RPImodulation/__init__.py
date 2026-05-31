@@ -3,8 +3,21 @@ from PiPerW.driver.pheripherals import Pheripherals
 from PiPerW.driver.display import Display
 from PiPerW.helpers import Log, Config, download_lib_from_github, select_number
 from PiPerW.utils.Menu import Menu, MenuFromDataFolder
-import os, sys, time
+import os, sys, time, shutil
 import subprocess
+
+
+def _safe_path(path):
+    """Resolve path. Reject traversal/shell metachars."""
+    if not path:
+        raise ValueError("Empty path")
+    resolved = os.path.realpath(path)
+    if not os.path.exists(resolved):
+        raise FileNotFoundError(resolved)
+    bad = set('`$;&|<>\n\r"\\')
+    if any(c in bad for c in resolved):
+        raise ValueError(f"Refusing unsafe path: {resolved!r}")
+    return resolved
 
 
 display = Display()
@@ -47,8 +60,8 @@ class App(AppInterface):
             try:
                 display.text("Installing libsndfile1-dev... \n (1/3)")
                 Log.warning("Installing libsndfile1-dev")
-                res = os.system("sudo apt install libsndfile1-dev -y")
-                
+                res = subprocess.run(["sudo", "apt", "install", "libsndfile1-dev", "-y"]).returncode
+
                 if res != 0:
                     Log.error("Failed to install libsndfile1-dev")
                     display.text("Failed to install libsndfile1-dev")
@@ -60,9 +73,10 @@ class App(AppInterface):
                 Log.warning("Downloading rpitx")
                 # remove path if exists
                 if os.path.exists(self.lib_path):
-                    res = os.system("rm -rf "+self.lib_path)
-                    if res != 0:
-                        Log.error("Failed to remove rpitx")
+                    try:
+                        shutil.rmtree(self.lib_path)
+                    except Exception as e:
+                        Log.error(f"Failed to remove rpitx: {e!r}")
                         display.text("Failed to remove rpitx")
                         self.wait_for_input(getattr(self, 'process', None))
                         raise SystemError("Failed to remove rpitx")
@@ -72,7 +86,7 @@ class App(AppInterface):
                 
                 # compile PiFmRds
                 Log.warning("Compiling rpitx")
-                res = os.system("cd PiPerW/lib/rpitx && ./install.sh")
+                res = subprocess.run(["./install.sh"], cwd="PiPerW/lib/rpitx").returncode
                 
                 if res != 0:
                     Log.error("Failed to compile rpitx")
@@ -136,16 +150,45 @@ class App(AppInterface):
         
     def stop_process(self):
         '''
-        Stop the process
+        Stop the process (or pipeline). self.process may be a Popen
+        or a list of Popen (pipeline).
         '''
-        if self.process is not None:
-            self.process.terminate()
-        
-        if self.process.poll() is None:
-            self.process.kill()
-            
-        self.process.wait()
+        if self.process is None:
+            return
+        procs = self.process if isinstance(self.process, list) else [self.process]
+        for p in procs:
+            try:
+                if p.poll() is None:
+                    p.terminate()
+            except Exception as e:
+                Log.warning(f"terminate failed: {e!r}")
+        for p in procs:
+            try:
+                p.wait(timeout=2)
+            except Exception:
+                try:
+                    p.kill()
+                except Exception as e:
+                    Log.warning(f"kill failed: {e!r}")
         self.process = None
+
+    def start_pipeline(self, stages):
+        """Start a pipeline of argv lists. No shell. Returns list of Popen."""
+        procs = []
+        prev_stdout = None
+        for i, argv in enumerate(stages):
+            is_last = (i == len(stages) - 1)
+            p = subprocess.Popen(
+                argv,
+                stdin=prev_stdout,
+                stdout=None if is_last else subprocess.PIPE,
+            )
+            if prev_stdout is not None:
+                prev_stdout.close()
+            prev_stdout = p.stdout
+            procs.append(p)
+        self.process = procs
+        return procs
         
     
     def exec(self, option):
@@ -228,8 +271,27 @@ class App(AppInterface):
         image =image_menu.get_full_path()
         
         display.text("Showing spectrum image at frequency: "+str(self.frequency)+" MHz\nPress any key to stop")
-        # pillow convert image to 320x256        
-        os.system(f"convert {image} -resize 320x256 -flip -quantize YUV -dither FloydSteinberg -colors 4 -interlace partition /tmp/spectrum.yuv")
+        # pillow convert image to 320x256
+        try:
+            image = _safe_path(image)
+        except Exception as e:
+            Log.error(f"Rejected image path: {e!r}")
+            display.text("Invalid image path")
+            return
+        res = subprocess.run([
+            "convert", image,
+            "-resize", "320x256",
+            "-flip",
+            "-quantize", "YUV",
+            "-dither", "FloydSteinberg",
+            "-colors", "4",
+            "-interlace", "partition",
+            "/tmp/spectrum.yuv",
+        ]).returncode
+        if res != 0:
+            Log.error(f"convert failed rc={res}")
+            display.text("convert failed")
+            return
         self.start_process(self.executable_root+"/spectrumpaint", ["/tmp/spectrum.yuv", str(self.frequency)+"e6", "100000"])
         self.wait_for_input(getattr(self, 'process', None))
         self.stop_process()
@@ -255,9 +317,63 @@ class App(AppInterface):
 #   | csdr gain_ff 4.0 | csdr dsb_fc \
 #   | sudo ./rpitx -i - -m IQFLOAT -f "$1" -s 48000
 
-        self.start_process("bash", ["-c", f"(while true; do cat '{audio_file}'; done) | csdr convert_i16_f | csdr gain_ff 4.0 | csdr dsb_fc | {self.executable_root}/sendiq -s 48000 -f {self.frequency}e6 -t i16 -i -"])
-        self.wait_for_input(getattr(self, 'process', None))
-        self.stop_process()
+        try:
+            audio_file = _safe_path(audio_file)
+        except Exception as e:
+            Log.error(f"Rejected audio path: {e!r}")
+            display.text("Invalid audio path")
+            return
+
+        # Pipeline (no shell): convert_i16_f | gain_ff | dsb_fc | sendiq
+        # First stage stdin is fed by a Python loop that re-reads the file.
+        import threading
+        conv = subprocess.Popen(
+            ["csdr", "convert_i16_f"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        )
+        gain = subprocess.Popen(
+            ["csdr", "gain_ff", "4.0"],
+            stdin=conv.stdout, stdout=subprocess.PIPE,
+        )
+        conv.stdout.close()
+        dsb = subprocess.Popen(
+            ["csdr", "dsb_fc"],
+            stdin=gain.stdout, stdout=subprocess.PIPE,
+        )
+        gain.stdout.close()
+        send = subprocess.Popen(
+            [self.executable_root + "/sendiq", "-s", "48000",
+             "-f", f"{self.frequency}e6", "-t", "i16", "-i", "-"],
+            stdin=dsb.stdout,
+        )
+        dsb.stdout.close()
+        self.process = [conv, gain, dsb, send]
+
+        stop_feed = threading.Event()
+        def _feeder():
+            try:
+                while not stop_feed.is_set() and conv.poll() is None:
+                    with open(audio_file, "rb") as f:
+                        while not stop_feed.is_set():
+                            chunk = f.read(8192)
+                            if not chunk:
+                                break
+                            try:
+                                conv.stdin.write(chunk)
+                            except (BrokenPipeError, ValueError):
+                                return
+            finally:
+                try:
+                    conv.stdin.close()
+                except Exception:
+                    pass
+        feeder = threading.Thread(target=_feeder, daemon=True)
+        feeder.start()
+        try:
+            self.wait_for_input(send)
+        finally:
+            stop_feed.set()
+            self.stop_process()
         
         
     def send_iq(self):
@@ -278,10 +394,25 @@ class App(AppInterface):
         display.text("Sending IQ file at frequency: "+str(self.frequency)+" MHz\nPress any key to stop")
         Log.info("Sending IQ file at frequency: "+str(self.frequency)+" MHz")
         
+        try:
+            iq_file = _safe_path(iq_file)
+        except Exception as e:
+            Log.error(f"Rejected IQ path: {e!r}")
+            display.text("Invalid IQ path")
+            return
+
         # get type and sample rate
         tipe_file, sample_rate = iq_file.split("-")[-2:]
         sample_rate = sample_rate.split(".")[0]
-        
+        if tipe_file not in ("u8", "i16"):
+            Log.error(f"Unknown IQ type: {tipe_file}")
+            display.text("Unknown IQ type")
+            return
+        if not sample_rate.isdigit():
+            Log.error(f"Invalid sample rate: {sample_rate}")
+            display.text("Invalid sample rate")
+            return
+
         self.start_process(self.executable_root+"/sendiq", ["-s", sample_rate, "-f", str(self.frequency)+"e6", "-t", tipe_file, "-i", iq_file])
         self.wait_for_input(getattr(self, 'process', None))
         self.stop_process()

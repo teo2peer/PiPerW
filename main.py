@@ -6,9 +6,11 @@
 from PiPerW.helpers import Config, WThread, Log
 from PiPerW.utils.Menu import MenuFolder
 from PiPerW.driver.display import Display
+import atexit
 import importlib
 import multiprocessing
 import os
+import signal
 import sys
 import subprocess
 import time
@@ -38,7 +40,7 @@ def first_run():
         
         # Restart program
         Log.info("Restarting PiPerW")
-        os.system("sudo python3 main.py")
+        os.execvp("sudo", ["sudo", sys.executable, os.path.abspath(sys.argv[0])])
         
     except Exception as e:
         Log.error(f"Error running setup script: {e}")
@@ -262,10 +264,12 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs, force_reinstall
                 elif update:
                     cmd = ['sudo', 'apt-get', 'install', '--only-upgrade', '-y', pkg]
                     
-                subprocess.run(cmd)
+                rc = subprocess.run(cmd).returncode
                 has_installed_something = True
-                
-                if pkg not in cache["apt"]:
+
+                if rc != 0:
+                    Log.error(f"APT install failed rc={rc} for {pkg}")
+                elif pkg not in cache["apt"]:
                     cache["apt"].append(pkg)
             else:
                 update_progress(f"Check APT: {pkg[:10]}")
@@ -292,10 +296,12 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs, force_reinstall
                 elif update:
                     cmd = [sys.executable, '-m', 'pip', 'install', '--upgrade', pkg]
                     
-                subprocess.run(cmd)
+                rc = subprocess.run(cmd).returncode
                 has_installed_something = True
-                
-                if pkg not in cache["pip"]:
+
+                if rc != 0:
+                    Log.error(f"PIP install failed rc={rc} for {pkg}")
+                elif pkg not in cache["pip"]:
                     cache["pip"].append(pkg)
             else:
                 update_progress(f"Check PIP: {pkg[:10]}")
@@ -320,15 +326,19 @@ def resolve_dependencies(app_name, apt_reqs, pip_reqs, git_reqs, force_reinstall
                 if force_reinstall and os.path.exists(target_path):
                     import shutil
                     shutil.rmtree(target_path)
-                subprocess.run(['git', 'clone', repo_url, target_path])
+                rc = subprocess.run(['git', 'clone', repo_url, target_path]).returncode
                 has_installed_something = True
-                
-                if repo_url not in cache["github"]:
+
+                if rc != 0:
+                    Log.error(f"git clone failed rc={rc} for {repo_url}")
+                elif repo_url not in cache["github"]:
                     cache["github"].append(repo_url)
             elif update:
                 update_progress(f"Update GIT:\n{repo_name[:15]}")
                 Log.info(f"Updating GIT dependency for {app_name}: {repo_url}")
-                subprocess.run(['git', '-C', target_path, 'pull'])
+                rc = subprocess.run(['git', '-C', target_path, 'pull']).returncode
+                if rc != 0:
+                    Log.error(f"git pull failed rc={rc} for {repo_url}")
                 has_installed_something = True
             else:
                 update_progress(f"Check GIT: {repo_name[:10]}")
@@ -403,14 +413,18 @@ def execute_app(app, folder):
         app_module._thread = t
         t.start()
 
-        # Non-blocking wait to keep main thread responsive
+        # Event-driven wait: block until app thread finishes OR Dead Man's Switch fires.
+        kill_event = getattr(Pheripheral, 'force_kill_event', None)
         while t.is_alive():
-            if getattr(Pheripheral, 'force_app_kill', False):
-                Log.error(f"[SRE] Dead Man's Switch Triggered! Forcibly abandoning unrensponsive app: {app}")
-                t.stop() # set stop event
-                Pheripheral.force_app_kill = False
-                break # Regain UI Control immediately
-            t.join(0.1)
+            if kill_event is not None:
+                # Wake up either on kill OR after 1s (cheap upper bound for is_alive check).
+                if kill_event.wait(timeout=1.0):
+                    Log.error(f"[SRE] Dead Man's Switch Triggered! Forcibly abandoning unrensponsive app: {app}")
+                    t.stop()
+                    Pheripheral.force_app_kill = False
+                    break
+            else:
+                t.join(0.5)
 
         if hasattr(t, 'exc') and t.exc:
             raise t.exc
@@ -453,21 +467,41 @@ def stop_app():
     '''
     Stop the app
     '''
-    Display.stop_animation()
-    Display.text("Stopping PiPerW")
-    Pheripheral.stop()
-    
-    Display.clear()
+    try:
+        Display.stop_animation()
+        Display.text("Stopping PiPerW")
+    except Exception as e:
+        Log.warning(f"display stop failed: {e!r}")
+    if Pheripheral is not None:
+        try:
+            Pheripheral.stop()
+        except Exception as e:
+            Log.warning(f"pheripheral stop failed: {e!r}")
+    try:
+        Display.clear()
+    except Exception as e:
+        Log.warning(f"display clear failed: {e!r}")
     
 
+def _sigterm_handler(_sig, _frm):
+    Log.info("SIGTERM received")
+    raise KeyboardInterrupt
+
+
+def _atexit_cleanup():
+    try:
+        stop_app()
+    except Exception as e:
+        Log.warning(f"atexit cleanup error: {e!r}")
+
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, _sigterm_handler)
+    atexit.register(_atexit_cleanup)
     try:
         init()
     except KeyboardInterrupt:
         Log.info("Exiting PiPerW")
-        
-        stop_app()
-        
         sys.exit(0)
     except Exception as e:
         Log.error(f"Error initializing PiPerW: {e}")

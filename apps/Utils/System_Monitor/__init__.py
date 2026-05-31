@@ -44,7 +44,7 @@ class App(AppInterface):
                     temp_c = float(temp_output) / 1000.0
                 else:
                     temp_c = 0.0
-            except:
+            except Exception:
                 temp_c = 0.0
 
             # Draw Header

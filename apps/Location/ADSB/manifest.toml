@@ -1,0 +1,10 @@
+[app]
+name = "ADS-B Receiver"
+version = "1.0"
+description = "Wrap dump1090-fa and list nearest aircraft (requires RTL-SDR)"
+author = "PiPerW"
+
+[requirements]
+apt = ["dump1090-fa"]
+pip = []
+github = []

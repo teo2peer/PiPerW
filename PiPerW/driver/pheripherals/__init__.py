@@ -2,22 +2,36 @@ from PiPerW.helpers import Config, Log, WThread, save_config
 from PiPerW.interfaces.pheripheral_interface import PheripheralAction
 from PiPerW.utils.Singleton import Singleton
 import importlib
+import threading
 import time, sys
 
 class Pheripherals(metaclass=Singleton):
-    
+
     def __init__(self):
         '''
         Initialize pheripherals.
         '''
-        
+
         Log.warning("Initializing pheripherals")
         self.controllers = []
         self.key = None
         self.timestamp = 0
-        self.force_app_kill = False # Dead Man's Switch flag
+        self._force_app_kill = False # Dead Man's Switch flag (use property)
+        self.force_kill_event = threading.Event()
         self.suppress_exit = False  # When True, EXIT key is ignored (apps should be killed via long-press only)
         self.debug_keys = False
+
+    @property
+    def force_app_kill(self):
+        return self._force_app_kill
+
+    @force_app_kill.setter
+    def force_app_kill(self, value):
+        self._force_app_kill = bool(value)
+        if value:
+            self.force_kill_event.set()
+        else:
+            self.force_kill_event.clear()
         
         # Load controllers from config or use default keyboard
         if Config['pheripherals'].get('controllers'):

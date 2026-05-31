@@ -1,0 +1,18 @@
+[theme]
+name = "retro_dos"
+description = "Amber-on-black DOS look. Color displays only."
+
+[colors]
+bg = "#1a0a00"
+fg = "#ffaa00"
+accent = "#ffd055"
+muted = "#664400"
+
+[fonts]
+default = "monospace"
+size = 11
+
+[layout]
+frame = "double"
+padding = 3
+scrollbar = true

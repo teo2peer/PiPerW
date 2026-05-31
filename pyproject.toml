@@ -1,0 +1,19 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [
+    "apps/BadUSB/pico-badusb",
+    "PiPerW/lib",
+    "**/__pycache__",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "UP", "SIM"]
+ignore = [
+    "E501",  # line length (display-format strings can be long)
+    "E402",  # module-level import order (legacy top-level imports inside try)
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

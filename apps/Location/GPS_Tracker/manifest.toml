@@ -1,0 +1,10 @@
+[app]
+name = "GPS Tracker"
+version = "1.0"
+description = "Read NMEA from a serial GPS module and log a GPX track"
+author = "PiPerW"
+
+[requirements]
+apt = []
+pip = ["pyserial"]
+github = []

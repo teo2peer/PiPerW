@@ -1,7 +1,7 @@
 [app]
-name = "BadUSB Pico"
+name = "Log Viewer"
 version = "1.0"
-description = "DuckyScript USB HID injection via a Pi Pico"
+description = "Tail output.log and per-app logs"
 author = "PiPerW"
 
 [requirements]

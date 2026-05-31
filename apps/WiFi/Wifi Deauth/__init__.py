@@ -27,7 +27,7 @@ class App(AppInterface):
         for f in glob.glob("PiPerW/tmp/scan*"):
             try:
                 os.remove(f)
-            except:
+            except OSError:
                 pass
 
 
@@ -106,7 +106,7 @@ class App(AppInterface):
                         ssid = row.get('ESSID', '').strip()
                         if bssid and bssid not in [a['BSSID'] for a in self.ap]:
                             self.ap.append(row)
-                    except:
+                    except (KeyError, AttributeError):
                         pass
 
         if not self.ap:

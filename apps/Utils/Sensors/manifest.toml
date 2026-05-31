@@ -1,0 +1,10 @@
+[app]
+name = "Sensor Dashboard"
+version = "1.0"
+description = "Auto-discover registered SensorInterface instances and rotate views"
+author = "PiPerW"
+
+[requirements]
+apt = []
+pip = []
+github = []

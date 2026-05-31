@@ -1,0 +1,18 @@
+[theme]
+name = "dark"
+description = "High-contrast dark theme for OLED"
+
+[colors]
+bg = "#000000"
+fg = "#ffffff"
+accent = "#00ffaa"
+muted = "#444444"
+
+[fonts]
+default = "default"
+size = 10
+
+[layout]
+frame = "thin"
+padding = 2
+scrollbar = true

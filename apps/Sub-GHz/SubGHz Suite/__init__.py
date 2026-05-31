@@ -448,4 +448,4 @@ class App(AppInterface):
     def cleanup(self):
         try:
             if self.cc1101: self.cc1101.shutdown()
-        except: pass
+        except Exception: pass

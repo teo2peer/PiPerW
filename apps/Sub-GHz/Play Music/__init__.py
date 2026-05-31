@@ -38,7 +38,8 @@ class App(AppInterface):
             # try to install PiFmRds
             try:
                 Log.warning("Installing libsndfile1-dev")
-                res = os.system("sudo apt install libsndfile1-dev -y")
+                import subprocess, shutil as _shutil
+                res = subprocess.run(["sudo", "apt", "install", "libsndfile1-dev", "-y"]).returncode
                 
                 if res != 0:
                     Log.error("Failed to install libsndfile1-dev")
@@ -50,7 +51,12 @@ class App(AppInterface):
                 Log.warning("Downloading PiFmRds")
                 # remove path if exists
                 if os.path.exists(self.lib_path):
-                    res = os.system("rm -rf "+self.lib_path)
+                    try:
+                        _shutil.rmtree(self.lib_path)
+                        res = 0
+                    except Exception as e:
+                        Log.error(f"rmtree failed: {e!r}")
+                        res = 1
                     if res != 0:
                         Log.error("Failed to remove PiFmRds")
                         display.text("Failed to remove PiFmRds")
@@ -62,7 +68,7 @@ class App(AppInterface):
                 
                 # compile PiFmRds
                 Log.warning("Compiling PiFmRds")
-                res = os.system("cd PiPerW/lib/PiFmRds/src && make clean && make")
+                res = subprocess.run(["sh", "-c", "make clean && make"], cwd="PiPerW/lib/PiFmRds/src").returncode
                 
                 if res != 0:
                     Log.error("Failed to compile PiFmRds")

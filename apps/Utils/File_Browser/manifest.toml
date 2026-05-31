@@ -1,0 +1,10 @@
+[app]
+name = "File Browser"
+version = "1.0"
+description = "Browse the public/ directory: view text, delete with confirm"
+author = "PiPerW"
+
+[requirements]
+apt = []
+pip = []
+github = []

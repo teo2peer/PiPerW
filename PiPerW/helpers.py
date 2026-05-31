@@ -3,7 +3,12 @@ import os
 import sys
 import inspect
 import threading
+from pathlib import Path
 from PiPerW.utils.Logging import Logging
+
+
+# Absolute project root, resolved once at import. PiPerW/helpers.py -> repo root.
+PIPERW_ROOT = Path(__file__).resolve().parent.parent
 
 
 class BCOLORS:
@@ -140,8 +145,9 @@ def download_lib_from_github(url, lib_name):
     '''
     # check if the resources folder exists
     Log.warning("Downloading library {} from github into {}".format(url, lib_name))
-    res = os.system('git clone {} PiPerW/lib/{}'.format(url, lib_name))
-    
+    import subprocess
+    res = subprocess.run(["git", "clone", url, "PiPerW/lib/" + lib_name]).returncode
+
     if res != 0:
         Log.error("Error downloading the library")
         raise Exception("Error downloading the library")

@@ -37,6 +37,24 @@ class AppInterface:
         self._thread = None # Reference to the WThread running this app
         self._state_dir = os.path.join("data", self.name.replace(" ", "_").lower())
         os.makedirs(self._state_dir, exist_ok=True)
+        self._storage = None
+        self._notifier = None
+
+    @property
+    def storage(self):
+        """Lazy per-app key/value storage (JSONFileStorage)."""
+        if self._storage is None:
+            from PiPerW.interfaces.storage_interface import JSONFileStorage
+            self._storage = JSONFileStorage(self._state_dir)
+        return self._storage
+
+    def notify(self, text, level="info", ttl=3.0):
+        """Toast on display + log line."""
+        if self._notifier is None:
+            from PiPerW.interfaces.notification_interface import DisplayNotifier
+            from PiPerW.driver.display import Display
+            self._notifier = DisplayNotifier(Display())
+        self._notifier.notify(text, level=level, ttl=ttl)
 
     def __str__(self):
         return f"{self.name} {self.version}"
@@ -44,7 +62,8 @@ class AppInterface:
     def get_public_dir(self):
         """Returns the global structured 'public' directory at root."""
         import os
-        base_dir = os.path.join(os.getcwd(), "public")
+        from PiPerW.helpers import PIPERW_ROOT
+        base_dir = os.path.join(str(PIPERW_ROOT), "public")
         os.makedirs(os.path.join(base_dir, "music"), exist_ok=True)
         os.makedirs(os.path.join(base_dir, "images"), exist_ok=True)
         os.makedirs(os.path.join(base_dir, "files"), exist_ok=True)

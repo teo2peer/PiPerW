@@ -96,6 +96,6 @@ class Board(BoardInterface):
     def cleanup(self):
         for spi in self._spi_instances.values():
             try: spi.close()
-            except: pass
+            except Exception: pass
         if GPIO:
             GPIO.cleanup()

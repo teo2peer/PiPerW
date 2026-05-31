@@ -1,0 +1,10 @@
+[app]
+name = "LoRa Messenger"
+version = "1.0"
+description = "Send/receive short ASCII messages on an SX127x via SPI"
+author = "PiPerW"
+
+[requirements]
+apt = []
+pip = ["pyLoRa"]
+github = []

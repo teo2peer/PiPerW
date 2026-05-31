@@ -40,7 +40,7 @@ class ThemeInterface:
             try:
                 frame = Image.open('PiPerW/themes/{}/frames/{}.bmp'.format(theme, i))
                 frames.append(frame)
-            except:
+            except Exception:
                 self.max_frames = i
                 break
         return frames

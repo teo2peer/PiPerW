@@ -1,9 +1,7 @@
 setuptools
 toml
-coloredlogs
 luma.oled
-flask
-pillow
+pillow<10.4
 RPi.GPIO
 colorlog
 keyboard
@@ -13,3 +11,6 @@ smbus
 cc1101
 pn532pi
 numpy
+psutil
+# Optional: flask is only needed if display_cast is enabled in config.toml.
+flask

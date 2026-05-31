@@ -24,7 +24,7 @@ class App(AppInterface):
         # clear tmp files
         for f in glob.glob("PiPerW/tmp/scan*"):
             try: os.remove(f)
-            except: pass
+            except OSError: pass
 
         subprocess.run(["sudo", "airmon-ng", "check", "kill"], capture_output=True)
 
@@ -140,7 +140,7 @@ class App(AppInterface):
         Log.info("Stopping capture")
         cap_proc.terminate()
         try: deauth_proc.terminate()
-        except: pass
+        except Exception: pass
         subprocess.run(["sudo", "killall", "airodump-ng"], capture_output=True)
         
         display.text("Capture stopped.\nSaved to /public")

@@ -1,0 +1,10 @@
+[app]
+name = "Network Manager"
+version = "1.0"
+description = "List interfaces, toggle wlan, show IPs"
+author = "PiPerW"
+
+[requirements]
+apt = ["wireless-tools", "iproute2"]
+pip = []
+github = []
